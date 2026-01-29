@@ -1,0 +1,1324 @@
+{
+  "label_processing_results": {
+    "cleaned_Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv": {
+      "original_shape": [
+        191982,
+        79
+      ],
+      "original_labels": {
+        "DDoS": 125215,
+        "BENIGN": 66767
+      },
+      "attack_category_mapping": {
+        "DoS": 125215,
+        "Normal": 66767
+      },
+      "binary_label_distribution": {
+        "1": 125215,
+        "0": 66767
+      },
+      "normal_samples": 66767,
+      "anomaly_samples": 125215,
+      "anomaly_percentage": 65.22,
+      "label_processing_actions": [
+        "Mapped 2 original label types",
+        "Created 2 attack categories",
+        "Converted to binary classification: Normal vs Anomaly",
+        "Created multi-class labels for attack categories",
+        "Anomaly rate: 65.22%"
+      ],
+      "raw_labels": "0         BENIGN\n1         BENIGN\n2         BENIGN\n3         BENIGN\n4         BENIGN\n           ...  \n191977      DDoS\n191978      DDoS\n191979      DDoS\n191980      DDoS\n191981      DDoS\nName:  Label, Length: 191982, dtype: object",
+      "binary_labels": "0         0\n1         0\n2         0\n3         0\n4         0\n         ..\n191977    1\n191978    1\n191979    1\n191980    1\n191981    1\nName:  Label, Length: 191982, dtype: int64",
+      "attack_categories": "0         Normal\n1         Normal\n2         Normal\n3         Normal\n4         Normal\n           ...  \n191977       DoS\n191978       DoS\n191979       DoS\n191980       DoS\n191981       DoS\nName:  Label, Length: 191982, dtype: object",
+      "category_numeric": "[1 1 1 ... 0 0 0]",
+      "attack_type_numeric": "[0 0 0 ... 1 1 1]",
+      "category_encoder": "LabelEncoder()",
+      "attack_type_encoder": "LabelEncoder()",
+      "category_mapping": {
+        "Normal": "1",
+        "DoS": "0"
+      },
+      "attack_type_mapping": {
+        "BENIGN": "0",
+        "DDoS": "1"
+      },
+      "label_validation": {
+        "has_null_labels": "0",
+        "unique_binary_labels": 2,
+        "binary_label_range": [
+          0,
+          1
+        ],
+        "label_consistency": "True",
+        "total_samples": 191982
+      },
+      "class_balance_analysis": {
+        "normal_percentage": 34.78,
+        "anomaly_percentage": 65.22,
+        "imbalance_ratio": 1.88,
+        "balance_status": "Moderately Imbalanced",
+        "recommendations": [
+          "High anomaly rate - verify data quality and labeling"
+        ]
+      },
+      "final_dataset": {
+        "filename": "processed_Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
+        "shape": [
+          191982,
+          83
+        ],
+        "features": [
+          " Destination Port",
+          " Flow Duration",
+          " Total Fwd Packets",
+          " Total Backward Packets",
+          "Total Length of Fwd Packets",
+          " Total Length of Bwd Packets",
+          " Fwd Packet Length Max",
+          " Fwd Packet Length Min",
+          " Fwd Packet Length Mean",
+          " Fwd Packet Length Std",
+          "Bwd Packet Length Max",
+          " Bwd Packet Length Min",
+          " Bwd Packet Length Mean",
+          " Bwd Packet Length Std",
+          "Flow Bytes/s",
+          " Flow Packets/s",
+          " Flow IAT Mean",
+          " Flow IAT Std",
+          " Flow IAT Max",
+          " Flow IAT Min",
+          "Fwd IAT Total",
+          " Fwd IAT Mean",
+          " Fwd IAT Std",
+          " Fwd IAT Max",
+          " Fwd IAT Min",
+          "Bwd IAT Total",
+          " Bwd IAT Mean",
+          " Bwd IAT Std",
+          " Bwd IAT Max",
+          " Bwd IAT Min",
+          "Fwd PSH Flags",
+          " Bwd PSH Flags",
+          " Fwd URG Flags",
+          " Bwd URG Flags",
+          " Fwd Header Length",
+          " Bwd Header Length",
+          "Fwd Packets/s",
+          " Bwd Packets/s",
+          " Min Packet Length",
+          " Max Packet Length",
+          " Packet Length Mean",
+          " Packet Length Std",
+          " Packet Length Variance",
+          "FIN Flag Count",
+          " SYN Flag Count",
+          " RST Flag Count",
+          " PSH Flag Count",
+          " ACK Flag Count",
+          " URG Flag Count",
+          " CWE Flag Count",
+          " ECE Flag Count",
+          " Down/Up Ratio",
+          " Average Packet Size",
+          " Avg Fwd Segment Size",
+          " Avg Bwd Segment Size",
+          " Fwd Header Length.1",
+          "Fwd Avg Bytes/Bulk",
+          " Fwd Avg Packets/Bulk",
+          " Fwd Avg Bulk Rate",
+          " Bwd Avg Bytes/Bulk",
+          " Bwd Avg Packets/Bulk",
+          "Bwd Avg Bulk Rate",
+          "Subflow Fwd Packets",
+          " Subflow Fwd Bytes",
+          " Subflow Bwd Packets",
+          " Subflow Bwd Bytes",
+          "Init_Win_bytes_forward",
+          " Init_Win_bytes_backward",
+          " act_data_pkt_fwd",
+          " min_seg_size_forward",
+          "Active Mean",
+          " Active Std",
+          " Active Max",
+          " Active Min",
+          "Idle Mean",
+          " Idle Std",
+          " Idle Max",
+          " Idle Min",
+          " Label"
+        ],
+        "target_columns": [
+          "Binary_Label",
+          "Attack_Category",
+          "Attack_Category_Numeric",
+          "Attack_Type_Numeric"
+        ],
+        "binary_target": "Binary_Label",
+        "category_target": "Attack_Category_Numeric",
+        "attack_type_target": "Attack_Type_Numeric",
+        "saved_path": "data_preprocessing\\processed_data\\processed_Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv"
+      }
+    },
+    "cleaned_Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv": {
+      "original_shape": [
+        155524,
+        79
+      ],
+      "original_labels": {
+        "BENIGN": 89545,
+        "PortScan": 65979
+      },
+      "attack_category_mapping": {
+        "Normal": 89545,
+        "PortScan": 65979
+      },
+      "binary_label_distribution": {
+        "0": 89545,
+        "1": 65979
+      },
+      "normal_samples": 89545,
+      "anomaly_samples": 65979,
+      "anomaly_percentage": 42.42,
+      "label_processing_actions": [
+        "Mapped 2 original label types",
+        "Created 2 attack categories",
+        "Converted to binary classification: Normal vs Anomaly",
+        "Created multi-class labels for attack categories",
+        "Anomaly rate: 42.42%"
+      ],
+      "raw_labels": "0           BENIGN\n1           BENIGN\n2           BENIGN\n3           BENIGN\n4           BENIGN\n            ...   \n155519    PortScan\n155520    PortScan\n155521    PortScan\n155522    PortScan\n155523    PortScan\nName:  Label, Length: 155524, dtype: object",
+      "binary_labels": "0         0\n1         0\n2         0\n3         0\n4         0\n         ..\n155519    1\n155520    1\n155521    1\n155522    1\n155523    1\nName:  Label, Length: 155524, dtype: int64",
+      "attack_categories": "0           Normal\n1           Normal\n2           Normal\n3           Normal\n4           Normal\n            ...   \n155519    PortScan\n155520    PortScan\n155521    PortScan\n155522    PortScan\n155523    PortScan\nName:  Label, Length: 155524, dtype: object",
+      "category_numeric": "[0 0 0 ... 1 1 1]",
+      "attack_type_numeric": "[0 0 0 ... 1 1 1]",
+      "category_encoder": "LabelEncoder()",
+      "attack_type_encoder": "LabelEncoder()",
+      "category_mapping": {
+        "Normal": "0",
+        "PortScan": "1"
+      },
+      "attack_type_mapping": {
+        "BENIGN": "0",
+        "PortScan": "1"
+      },
+      "label_validation": {
+        "has_null_labels": "0",
+        "unique_binary_labels": 2,
+        "binary_label_range": [
+          0,
+          1
+        ],
+        "label_consistency": "True",
+        "total_samples": 155524
+      },
+      "class_balance_analysis": {
+        "normal_percentage": 57.58,
+        "anomaly_percentage": 42.42,
+        "imbalance_ratio": 1.36,
+        "balance_status": "Well Balanced",
+        "recommendations": [
+          "High anomaly rate - verify data quality and labeling"
+        ]
+      },
+      "final_dataset": {
+        "filename": "processed_Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv",
+        "shape": [
+          155524,
+          83
+        ],
+        "features": [
+          " Destination Port",
+          " Flow Duration",
+          " Total Fwd Packets",
+          " Total Backward Packets",
+          "Total Length of Fwd Packets",
+          " Total Length of Bwd Packets",
+          " Fwd Packet Length Max",
+          " Fwd Packet Length Min",
+          " Fwd Packet Length Mean",
+          " Fwd Packet Length Std",
+          "Bwd Packet Length Max",
+          " Bwd Packet Length Min",
+          " Bwd Packet Length Mean",
+          " Bwd Packet Length Std",
+          "Flow Bytes/s",
+          " Flow Packets/s",
+          " Flow IAT Mean",
+          " Flow IAT Std",
+          " Flow IAT Max",
+          " Flow IAT Min",
+          "Fwd IAT Total",
+          " Fwd IAT Mean",
+          " Fwd IAT Std",
+          " Fwd IAT Max",
+          " Fwd IAT Min",
+          "Bwd IAT Total",
+          " Bwd IAT Mean",
+          " Bwd IAT Std",
+          " Bwd IAT Max",
+          " Bwd IAT Min",
+          "Fwd PSH Flags",
+          " Bwd PSH Flags",
+          " Fwd URG Flags",
+          " Bwd URG Flags",
+          " Fwd Header Length",
+          " Bwd Header Length",
+          "Fwd Packets/s",
+          " Bwd Packets/s",
+          " Min Packet Length",
+          " Max Packet Length",
+          " Packet Length Mean",
+          " Packet Length Std",
+          " Packet Length Variance",
+          "FIN Flag Count",
+          " SYN Flag Count",
+          " RST Flag Count",
+          " PSH Flag Count",
+          " ACK Flag Count",
+          " URG Flag Count",
+          " CWE Flag Count",
+          " ECE Flag Count",
+          " Down/Up Ratio",
+          " Average Packet Size",
+          " Avg Fwd Segment Size",
+          " Avg Bwd Segment Size",
+          " Fwd Header Length.1",
+          "Fwd Avg Bytes/Bulk",
+          " Fwd Avg Packets/Bulk",
+          " Fwd Avg Bulk Rate",
+          " Bwd Avg Bytes/Bulk",
+          " Bwd Avg Packets/Bulk",
+          "Bwd Avg Bulk Rate",
+          "Subflow Fwd Packets",
+          " Subflow Fwd Bytes",
+          " Subflow Bwd Packets",
+          " Subflow Bwd Bytes",
+          "Init_Win_bytes_forward",
+          " Init_Win_bytes_backward",
+          " act_data_pkt_fwd",
+          " min_seg_size_forward",
+          "Active Mean",
+          " Active Std",
+          " Active Max",
+          " Active Min",
+          "Idle Mean",
+          " Idle Std",
+          " Idle Max",
+          " Idle Min",
+          " Label"
+        ],
+        "target_columns": [
+          "Binary_Label",
+          "Attack_Category",
+          "Attack_Category_Numeric",
+          "Attack_Type_Numeric"
+        ],
+        "binary_target": "Binary_Label",
+        "category_target": "Attack_Category_Numeric",
+        "attack_type_target": "Attack_Type_Numeric",
+        "saved_path": "data_preprocessing\\processed_data\\processed_Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv"
+      }
+    },
+    "cleaned_Friday-WorkingHours-Morning.pcap_ISCX.csv": {
+      "original_shape": [
+        91970,
+        79
+      ],
+      "original_labels": {
+        "BENIGN": 91695,
+        "Bot": 275
+      },
+      "attack_category_mapping": {
+        "Normal": 91695,
+        "Botnet": 275
+      },
+      "binary_label_distribution": {
+        "0": 91695,
+        "1": 275
+      },
+      "normal_samples": 91695,
+      "anomaly_samples": 275,
+      "anomaly_percentage": 0.3,
+      "label_processing_actions": [
+        "Mapped 2 original label types",
+        "Created 2 attack categories",
+        "Converted to binary classification: Normal vs Anomaly",
+        "Created multi-class labels for attack categories",
+        "Anomaly rate: 0.3%"
+      ],
+      "raw_labels": "0        BENIGN\n1        BENIGN\n2        BENIGN\n3        BENIGN\n4        BENIGN\n          ...  \n91965    BENIGN\n91966       Bot\n91967    BENIGN\n91968    BENIGN\n91969    BENIGN\nName:  Label, Length: 91970, dtype: object",
+      "binary_labels": "0        0\n1        0\n2        0\n3        0\n4        0\n        ..\n91965    0\n91966    1\n91967    0\n91968    0\n91969    0\nName:  Label, Length: 91970, dtype: int64",
+      "attack_categories": "0        Normal\n1        Normal\n2        Normal\n3        Normal\n4        Normal\n          ...  \n91965    Normal\n91966    Botnet\n91967    Normal\n91968    Normal\n91969    Normal\nName:  Label, Length: 91970, dtype: object",
+      "category_numeric": "[1 1 1 ... 1 1 1]",
+      "attack_type_numeric": "[0 0 0 ... 0 0 0]",
+      "category_encoder": "LabelEncoder()",
+      "attack_type_encoder": "LabelEncoder()",
+      "category_mapping": {
+        "Normal": "1",
+        "Botnet": "0"
+      },
+      "attack_type_mapping": {
+        "BENIGN": "0",
+        "Bot": "1"
+      },
+      "label_validation": {
+        "has_null_labels": "0",
+        "unique_binary_labels": 2,
+        "binary_label_range": [
+          0,
+          1
+        ],
+        "label_consistency": "True",
+        "total_samples": 91970
+      },
+      "class_balance_analysis": {
+        "normal_percentage": 99.7,
+        "anomaly_percentage": 0.3,
+        "imbalance_ratio": 333.44,
+        "balance_status": "Severely Imbalanced",
+        "recommendations": [
+          "Consider class balancing techniques (SMOTE, undersampling)",
+          "Very low anomaly rate - consider anomaly detection specific techniques"
+        ]
+      },
+      "final_dataset": {
+        "filename": "processed_Friday-WorkingHours-Morning.pcap_ISCX.csv",
+        "shape": [
+          91970,
+          83
+        ],
+        "features": [
+          " Destination Port",
+          " Flow Duration",
+          " Total Fwd Packets",
+          " Total Backward Packets",
+          "Total Length of Fwd Packets",
+          " Total Length of Bwd Packets",
+          " Fwd Packet Length Max",
+          " Fwd Packet Length Min",
+          " Fwd Packet Length Mean",
+          " Fwd Packet Length Std",
+          "Bwd Packet Length Max",
+          " Bwd Packet Length Min",
+          " Bwd Packet Length Mean",
+          " Bwd Packet Length Std",
+          "Flow Bytes/s",
+          " Flow Packets/s",
+          " Flow IAT Mean",
+          " Flow IAT Std",
+          " Flow IAT Max",
+          " Flow IAT Min",
+          "Fwd IAT Total",
+          " Fwd IAT Mean",
+          " Fwd IAT Std",
+          " Fwd IAT Max",
+          " Fwd IAT Min",
+          "Bwd IAT Total",
+          " Bwd IAT Mean",
+          " Bwd IAT Std",
+          " Bwd IAT Max",
+          " Bwd IAT Min",
+          "Fwd PSH Flags",
+          " Bwd PSH Flags",
+          " Fwd URG Flags",
+          " Bwd URG Flags",
+          " Fwd Header Length",
+          " Bwd Header Length",
+          "Fwd Packets/s",
+          " Bwd Packets/s",
+          " Min Packet Length",
+          " Max Packet Length",
+          " Packet Length Mean",
+          " Packet Length Std",
+          " Packet Length Variance",
+          "FIN Flag Count",
+          " SYN Flag Count",
+          " RST Flag Count",
+          " PSH Flag Count",
+          " ACK Flag Count",
+          " URG Flag Count",
+          " CWE Flag Count",
+          " ECE Flag Count",
+          " Down/Up Ratio",
+          " Average Packet Size",
+          " Avg Fwd Segment Size",
+          " Avg Bwd Segment Size",
+          " Fwd Header Length.1",
+          "Fwd Avg Bytes/Bulk",
+          " Fwd Avg Packets/Bulk",
+          " Fwd Avg Bulk Rate",
+          " Bwd Avg Bytes/Bulk",
+          " Bwd Avg Packets/Bulk",
+          "Bwd Avg Bulk Rate",
+          "Subflow Fwd Packets",
+          " Subflow Fwd Bytes",
+          " Subflow Bwd Packets",
+          " Subflow Bwd Bytes",
+          "Init_Win_bytes_forward",
+          " Init_Win_bytes_backward",
+          " act_data_pkt_fwd",
+          " min_seg_size_forward",
+          "Active Mean",
+          " Active Std",
+          " Active Max",
+          " Active Min",
+          "Idle Mean",
+          " Idle Std",
+          " Idle Max",
+          " Idle Min",
+          " Label"
+        ],
+        "target_columns": [
+          "Binary_Label",
+          "Attack_Category",
+          "Attack_Category_Numeric",
+          "Attack_Type_Numeric"
+        ],
+        "binary_target": "Binary_Label",
+        "category_target": "Attack_Category_Numeric",
+        "attack_type_target": "Attack_Type_Numeric",
+        "saved_path": "data_preprocessing\\processed_data\\processed_Friday-WorkingHours-Morning.pcap_ISCX.csv"
+      }
+    },
+    "cleaned_Monday-WorkingHours.pcap_ISCX.csv": {
+      "original_shape": [
+        292308,
+        79
+      ],
+      "original_labels": {
+        "BENIGN": 292308
+      },
+      "attack_category_mapping": {
+        "Normal": 292308
+      },
+      "binary_label_distribution": {
+        "0": 292308
+      },
+      "normal_samples": 292308,
+      "anomaly_samples": 0,
+      "anomaly_percentage": 0.0,
+      "label_processing_actions": [
+        "Mapped 1 original label types",
+        "Created 1 attack categories",
+        "Converted to binary classification: Normal vs Anomaly",
+        "Created multi-class labels for attack categories",
+        "Anomaly rate: 0.0%"
+      ],
+      "raw_labels": "0         BENIGN\n1         BENIGN\n2         BENIGN\n3         BENIGN\n4         BENIGN\n           ...  \n292303    BENIGN\n292304    BENIGN\n292305    BENIGN\n292306    BENIGN\n292307    BENIGN\nName:  Label, Length: 292308, dtype: object",
+      "binary_labels": "0         0\n1         0\n2         0\n3         0\n4         0\n         ..\n292303    0\n292304    0\n292305    0\n292306    0\n292307    0\nName:  Label, Length: 292308, dtype: int64",
+      "attack_categories": "0         Normal\n1         Normal\n2         Normal\n3         Normal\n4         Normal\n           ...  \n292303    Normal\n292304    Normal\n292305    Normal\n292306    Normal\n292307    Normal\nName:  Label, Length: 292308, dtype: object",
+      "category_numeric": "[0 0 0 ... 0 0 0]",
+      "attack_type_numeric": "[0 0 0 ... 0 0 0]",
+      "category_encoder": "LabelEncoder()",
+      "attack_type_encoder": "LabelEncoder()",
+      "category_mapping": {
+        "Normal": "0"
+      },
+      "attack_type_mapping": {
+        "BENIGN": "0"
+      },
+      "label_validation": {
+        "has_null_labels": "0",
+        "unique_binary_labels": 1,
+        "binary_label_range": [
+          0,
+          0
+        ],
+        "label_consistency": "True",
+        "total_samples": 292308
+      },
+      "class_balance_analysis": {
+        "normal_percentage": 100.0,
+        "anomaly_percentage": 0.0,
+        "imbalance_ratio": Infinity,
+        "balance_status": "Single Class Only",
+        "recommendations": [
+          "Consider class balancing techniques (SMOTE, undersampling)",
+          "Very low anomaly rate - consider anomaly detection specific techniques"
+        ]
+      },
+      "final_dataset": {
+        "filename": "processed_Monday-WorkingHours.pcap_ISCX.csv",
+        "shape": [
+          292308,
+          83
+        ],
+        "features": [
+          " Destination Port",
+          " Flow Duration",
+          " Total Fwd Packets",
+          " Total Backward Packets",
+          "Total Length of Fwd Packets",
+          " Total Length of Bwd Packets",
+          " Fwd Packet Length Max",
+          " Fwd Packet Length Min",
+          " Fwd Packet Length Mean",
+          " Fwd Packet Length Std",
+          "Bwd Packet Length Max",
+          " Bwd Packet Length Min",
+          " Bwd Packet Length Mean",
+          " Bwd Packet Length Std",
+          "Flow Bytes/s",
+          " Flow Packets/s",
+          " Flow IAT Mean",
+          " Flow IAT Std",
+          " Flow IAT Max",
+          " Flow IAT Min",
+          "Fwd IAT Total",
+          " Fwd IAT Mean",
+          " Fwd IAT Std",
+          " Fwd IAT Max",
+          " Fwd IAT Min",
+          "Bwd IAT Total",
+          " Bwd IAT Mean",
+          " Bwd IAT Std",
+          " Bwd IAT Max",
+          " Bwd IAT Min",
+          "Fwd PSH Flags",
+          " Bwd PSH Flags",
+          " Fwd URG Flags",
+          " Bwd URG Flags",
+          " Fwd Header Length",
+          " Bwd Header Length",
+          "Fwd Packets/s",
+          " Bwd Packets/s",
+          " Min Packet Length",
+          " Max Packet Length",
+          " Packet Length Mean",
+          " Packet Length Std",
+          " Packet Length Variance",
+          "FIN Flag Count",
+          " SYN Flag Count",
+          " RST Flag Count",
+          " PSH Flag Count",
+          " ACK Flag Count",
+          " URG Flag Count",
+          " CWE Flag Count",
+          " ECE Flag Count",
+          " Down/Up Ratio",
+          " Average Packet Size",
+          " Avg Fwd Segment Size",
+          " Avg Bwd Segment Size",
+          " Fwd Header Length.1",
+          "Fwd Avg Bytes/Bulk",
+          " Fwd Avg Packets/Bulk",
+          " Fwd Avg Bulk Rate",
+          " Bwd Avg Bytes/Bulk",
+          " Bwd Avg Packets/Bulk",
+          "Bwd Avg Bulk Rate",
+          "Subflow Fwd Packets",
+          " Subflow Fwd Bytes",
+          " Subflow Bwd Packets",
+          " Subflow Bwd Bytes",
+          "Init_Win_bytes_forward",
+          " Init_Win_bytes_backward",
+          " act_data_pkt_fwd",
+          " min_seg_size_forward",
+          "Active Mean",
+          " Active Std",
+          " Active Max",
+          " Active Min",
+          "Idle Mean",
+          " Idle Std",
+          " Idle Max",
+          " Idle Min",
+          " Label"
+        ],
+        "target_columns": [
+          "Binary_Label",
+          "Attack_Category",
+          "Attack_Category_Numeric",
+          "Attack_Type_Numeric"
+        ],
+        "binary_target": "Binary_Label",
+        "category_target": "Attack_Category_Numeric",
+        "attack_type_target": "Attack_Type_Numeric",
+        "saved_path": "data_preprocessing\\processed_data\\processed_Monday-WorkingHours.pcap_ISCX.csv"
+      }
+    },
+    "cleaned_Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv": {
+      "original_shape": [
+        154339,
+        79
+      ],
+      "original_labels": {
+        "BENIGN": 154314,
+        "Infiltration": 25
+      },
+      "attack_category_mapping": {
+        "Normal": 154314,
+        "Infiltration": 25
+      },
+      "binary_label_distribution": {
+        "0": 154314,
+        "1": 25
+      },
+      "normal_samples": 154314,
+      "anomaly_samples": 25,
+      "anomaly_percentage": 0.02,
+      "label_processing_actions": [
+        "Mapped 2 original label types",
+        "Created 2 attack categories",
+        "Converted to binary classification: Normal vs Anomaly",
+        "Created multi-class labels for attack categories",
+        "Anomaly rate: 0.02%"
+      ],
+      "raw_labels": "0         BENIGN\n1         BENIGN\n2         BENIGN\n3         BENIGN\n4         BENIGN\n           ...  \n154334    BENIGN\n154335    BENIGN\n154336    BENIGN\n154337    BENIGN\n154338    BENIGN\nName:  Label, Length: 154339, dtype: object",
+      "binary_labels": "0         0\n1         0\n2         0\n3         0\n4         0\n         ..\n154334    0\n154335    0\n154336    0\n154337    0\n154338    0\nName:  Label, Length: 154339, dtype: int64",
+      "attack_categories": "0         Normal\n1         Normal\n2         Normal\n3         Normal\n4         Normal\n           ...  \n154334    Normal\n154335    Normal\n154336    Normal\n154337    Normal\n154338    Normal\nName:  Label, Length: 154339, dtype: object",
+      "category_numeric": "[1 1 1 ... 1 1 1]",
+      "attack_type_numeric": "[0 0 0 ... 0 0 0]",
+      "category_encoder": "LabelEncoder()",
+      "attack_type_encoder": "LabelEncoder()",
+      "category_mapping": {
+        "Normal": "1",
+        "Infiltration": "0"
+      },
+      "attack_type_mapping": {
+        "BENIGN": "0",
+        "Infiltration": "1"
+      },
+      "label_validation": {
+        "has_null_labels": "0",
+        "unique_binary_labels": 2,
+        "binary_label_range": [
+          0,
+          1
+        ],
+        "label_consistency": "True",
+        "total_samples": 154339
+      },
+      "class_balance_analysis": {
+        "normal_percentage": 99.98,
+        "anomaly_percentage": 0.02,
+        "imbalance_ratio": 6172.56,
+        "balance_status": "Severely Imbalanced",
+        "recommendations": [
+          "Consider class balancing techniques (SMOTE, undersampling)",
+          "Very low anomaly rate - consider anomaly detection specific techniques"
+        ]
+      },
+      "final_dataset": {
+        "filename": "processed_Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv",
+        "shape": [
+          154339,
+          83
+        ],
+        "features": [
+          " Destination Port",
+          " Flow Duration",
+          " Total Fwd Packets",
+          " Total Backward Packets",
+          "Total Length of Fwd Packets",
+          " Total Length of Bwd Packets",
+          " Fwd Packet Length Max",
+          " Fwd Packet Length Min",
+          " Fwd Packet Length Mean",
+          " Fwd Packet Length Std",
+          "Bwd Packet Length Max",
+          " Bwd Packet Length Min",
+          " Bwd Packet Length Mean",
+          " Bwd Packet Length Std",
+          "Flow Bytes/s",
+          " Flow Packets/s",
+          " Flow IAT Mean",
+          " Flow IAT Std",
+          " Flow IAT Max",
+          " Flow IAT Min",
+          "Fwd IAT Total",
+          " Fwd IAT Mean",
+          " Fwd IAT Std",
+          " Fwd IAT Max",
+          " Fwd IAT Min",
+          "Bwd IAT Total",
+          " Bwd IAT Mean",
+          " Bwd IAT Std",
+          " Bwd IAT Max",
+          " Bwd IAT Min",
+          "Fwd PSH Flags",
+          " Bwd PSH Flags",
+          " Fwd URG Flags",
+          " Bwd URG Flags",
+          " Fwd Header Length",
+          " Bwd Header Length",
+          "Fwd Packets/s",
+          " Bwd Packets/s",
+          " Min Packet Length",
+          " Max Packet Length",
+          " Packet Length Mean",
+          " Packet Length Std",
+          " Packet Length Variance",
+          "FIN Flag Count",
+          " SYN Flag Count",
+          " RST Flag Count",
+          " PSH Flag Count",
+          " ACK Flag Count",
+          " URG Flag Count",
+          " CWE Flag Count",
+          " ECE Flag Count",
+          " Down/Up Ratio",
+          " Average Packet Size",
+          " Avg Fwd Segment Size",
+          " Avg Bwd Segment Size",
+          " Fwd Header Length.1",
+          "Fwd Avg Bytes/Bulk",
+          " Fwd Avg Packets/Bulk",
+          " Fwd Avg Bulk Rate",
+          " Bwd Avg Bytes/Bulk",
+          " Bwd Avg Packets/Bulk",
+          "Bwd Avg Bulk Rate",
+          "Subflow Fwd Packets",
+          " Subflow Fwd Bytes",
+          " Subflow Bwd Packets",
+          " Subflow Bwd Bytes",
+          "Init_Win_bytes_forward",
+          " Init_Win_bytes_backward",
+          " act_data_pkt_fwd",
+          " min_seg_size_forward",
+          "Active Mean",
+          " Active Std",
+          " Active Max",
+          " Active Min",
+          "Idle Mean",
+          " Idle Std",
+          " Idle Max",
+          " Idle Min",
+          " Label"
+        ],
+        "target_columns": [
+          "Binary_Label",
+          "Attack_Category",
+          "Attack_Category_Numeric",
+          "Attack_Type_Numeric"
+        ],
+        "binary_target": "Binary_Label",
+        "category_target": "Attack_Category_Numeric",
+        "attack_type_target": "Attack_Type_Numeric",
+        "saved_path": "data_preprocessing\\processed_data\\processed_Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv"
+      }
+    },
+    "cleaned_Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv": {
+      "original_shape": [
+        85154,
+        79
+      ],
+      "original_labels": {
+        "BENIGN": 83054,
+        "Web Attack \ufffd Brute Force": 1507,
+        "Web Attack \ufffd XSS": 593
+      },
+      "attack_category_mapping": {
+        "Normal": 83054,
+        "Other": 2100
+      },
+      "binary_label_distribution": {
+        "0": 83054,
+        "1": 2100
+      },
+      "normal_samples": 83054,
+      "anomaly_samples": 2100,
+      "anomaly_percentage": 2.47,
+      "label_processing_actions": [
+        "Mapped 3 original label types",
+        "Created 2 attack categories",
+        "Converted to binary classification: Normal vs Anomaly",
+        "Created multi-class labels for attack categories",
+        "Anomaly rate: 2.47%"
+      ],
+      "raw_labels": "0        BENIGN\n1        BENIGN\n2        BENIGN\n3        BENIGN\n4        BENIGN\n          ...  \n85149    BENIGN\n85150    BENIGN\n85151    BENIGN\n85152    BENIGN\n85153    BENIGN\nName:  Label, Length: 85154, dtype: object",
+      "binary_labels": "0        0\n1        0\n2        0\n3        0\n4        0\n        ..\n85149    0\n85150    0\n85151    0\n85152    0\n85153    0\nName:  Label, Length: 85154, dtype: int64",
+      "attack_categories": "0        Normal\n1        Normal\n2        Normal\n3        Normal\n4        Normal\n          ...  \n85149    Normal\n85150    Normal\n85151    Normal\n85152    Normal\n85153    Normal\nName:  Label, Length: 85154, dtype: object",
+      "category_numeric": "[0 0 0 ... 0 0 0]",
+      "attack_type_numeric": "[0 0 0 ... 0 0 0]",
+      "category_encoder": "LabelEncoder()",
+      "attack_type_encoder": "LabelEncoder()",
+      "category_mapping": {
+        "Normal": "0",
+        "Other": "1"
+      },
+      "attack_type_mapping": {
+        "BENIGN": "0",
+        "Web Attack \ufffd Brute Force": "1",
+        "Web Attack \ufffd XSS": "2"
+      },
+      "label_validation": {
+        "has_null_labels": "0",
+        "unique_binary_labels": 2,
+        "binary_label_range": [
+          0,
+          1
+        ],
+        "label_consistency": "True",
+        "total_samples": 85154
+      },
+      "class_balance_analysis": {
+        "normal_percentage": 97.53,
+        "anomaly_percentage": 2.47,
+        "imbalance_ratio": 39.55,
+        "balance_status": "Severely Imbalanced",
+        "recommendations": [
+          "Consider class balancing techniques (SMOTE, undersampling)",
+          "Very low anomaly rate - consider anomaly detection specific techniques"
+        ]
+      },
+      "final_dataset": {
+        "filename": "processed_Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv",
+        "shape": [
+          85154,
+          83
+        ],
+        "features": [
+          " Destination Port",
+          " Flow Duration",
+          " Total Fwd Packets",
+          " Total Backward Packets",
+          "Total Length of Fwd Packets",
+          " Total Length of Bwd Packets",
+          " Fwd Packet Length Max",
+          " Fwd Packet Length Min",
+          " Fwd Packet Length Mean",
+          " Fwd Packet Length Std",
+          "Bwd Packet Length Max",
+          " Bwd Packet Length Min",
+          " Bwd Packet Length Mean",
+          " Bwd Packet Length Std",
+          "Flow Bytes/s",
+          " Flow Packets/s",
+          " Flow IAT Mean",
+          " Flow IAT Std",
+          " Flow IAT Max",
+          " Flow IAT Min",
+          "Fwd IAT Total",
+          " Fwd IAT Mean",
+          " Fwd IAT Std",
+          " Fwd IAT Max",
+          " Fwd IAT Min",
+          "Bwd IAT Total",
+          " Bwd IAT Mean",
+          " Bwd IAT Std",
+          " Bwd IAT Max",
+          " Bwd IAT Min",
+          "Fwd PSH Flags",
+          " Bwd PSH Flags",
+          " Fwd URG Flags",
+          " Bwd URG Flags",
+          " Fwd Header Length",
+          " Bwd Header Length",
+          "Fwd Packets/s",
+          " Bwd Packets/s",
+          " Min Packet Length",
+          " Max Packet Length",
+          " Packet Length Mean",
+          " Packet Length Std",
+          " Packet Length Variance",
+          "FIN Flag Count",
+          " SYN Flag Count",
+          " RST Flag Count",
+          " PSH Flag Count",
+          " ACK Flag Count",
+          " URG Flag Count",
+          " CWE Flag Count",
+          " ECE Flag Count",
+          " Down/Up Ratio",
+          " Average Packet Size",
+          " Avg Fwd Segment Size",
+          " Avg Bwd Segment Size",
+          " Fwd Header Length.1",
+          "Fwd Avg Bytes/Bulk",
+          " Fwd Avg Packets/Bulk",
+          " Fwd Avg Bulk Rate",
+          " Bwd Avg Bytes/Bulk",
+          " Bwd Avg Packets/Bulk",
+          "Bwd Avg Bulk Rate",
+          "Subflow Fwd Packets",
+          " Subflow Fwd Bytes",
+          " Subflow Bwd Packets",
+          " Subflow Bwd Bytes",
+          "Init_Win_bytes_forward",
+          " Init_Win_bytes_backward",
+          " act_data_pkt_fwd",
+          " min_seg_size_forward",
+          "Active Mean",
+          " Active Std",
+          " Active Max",
+          " Active Min",
+          "Idle Mean",
+          " Idle Std",
+          " Idle Max",
+          " Idle Min",
+          " Label"
+        ],
+        "target_columns": [
+          "Binary_Label",
+          "Attack_Category",
+          "Attack_Category_Numeric",
+          "Attack_Type_Numeric"
+        ],
+        "binary_target": "Binary_Label",
+        "category_target": "Attack_Category_Numeric",
+        "attack_type_target": "Attack_Type_Numeric",
+        "saved_path": "data_preprocessing\\processed_data\\processed_Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv"
+      }
+    },
+    "cleaned_Tuesday-WorkingHours.pcap_ISCX.csv": {
+      "original_shape": [
+        231471,
+        79
+      ],
+      "original_labels": {
+        "BENIGN": 220560,
+        "FTP-Patator": 7938,
+        "SSH-Patator": 2973
+      },
+      "attack_category_mapping": {
+        "Normal": 220560,
+        "Other": 10911
+      },
+      "binary_label_distribution": {
+        "0": 220560,
+        "1": 10911
+      },
+      "normal_samples": 220560,
+      "anomaly_samples": 10911,
+      "anomaly_percentage": 4.71,
+      "label_processing_actions": [
+        "Mapped 3 original label types",
+        "Created 2 attack categories",
+        "Converted to binary classification: Normal vs Anomaly",
+        "Created multi-class labels for attack categories",
+        "Anomaly rate: 4.71%"
+      ],
+      "raw_labels": "0         BENIGN\n1         BENIGN\n2         BENIGN\n3         BENIGN\n4         BENIGN\n           ...  \n231466    BENIGN\n231467    BENIGN\n231468    BENIGN\n231469    BENIGN\n231470    BENIGN\nName:  Label, Length: 231471, dtype: object",
+      "binary_labels": "0         0\n1         0\n2         0\n3         0\n4         0\n         ..\n231466    0\n231467    0\n231468    0\n231469    0\n231470    0\nName:  Label, Length: 231471, dtype: int64",
+      "attack_categories": "0         Normal\n1         Normal\n2         Normal\n3         Normal\n4         Normal\n           ...  \n231466    Normal\n231467    Normal\n231468    Normal\n231469    Normal\n231470    Normal\nName:  Label, Length: 231471, dtype: object",
+      "category_numeric": "[0 0 0 ... 0 0 0]",
+      "attack_type_numeric": "[0 0 0 ... 0 0 0]",
+      "category_encoder": "LabelEncoder()",
+      "attack_type_encoder": "LabelEncoder()",
+      "category_mapping": {
+        "Normal": "0",
+        "Other": "1"
+      },
+      "attack_type_mapping": {
+        "BENIGN": "0",
+        "FTP-Patator": "1",
+        "SSH-Patator": "2"
+      },
+      "label_validation": {
+        "has_null_labels": "0",
+        "unique_binary_labels": 2,
+        "binary_label_range": [
+          0,
+          1
+        ],
+        "label_consistency": "True",
+        "total_samples": 231471
+      },
+      "class_balance_analysis": {
+        "normal_percentage": 95.29,
+        "anomaly_percentage": 4.71,
+        "imbalance_ratio": 20.21,
+        "balance_status": "Severely Imbalanced",
+        "recommendations": [
+          "Consider class balancing techniques (SMOTE, undersampling)",
+          "Very low anomaly rate - consider anomaly detection specific techniques"
+        ]
+      },
+      "final_dataset": {
+        "filename": "processed_Tuesday-WorkingHours.pcap_ISCX.csv",
+        "shape": [
+          231471,
+          83
+        ],
+        "features": [
+          " Destination Port",
+          " Flow Duration",
+          " Total Fwd Packets",
+          " Total Backward Packets",
+          "Total Length of Fwd Packets",
+          " Total Length of Bwd Packets",
+          " Fwd Packet Length Max",
+          " Fwd Packet Length Min",
+          " Fwd Packet Length Mean",
+          " Fwd Packet Length Std",
+          "Bwd Packet Length Max",
+          " Bwd Packet Length Min",
+          " Bwd Packet Length Mean",
+          " Bwd Packet Length Std",
+          "Flow Bytes/s",
+          " Flow Packets/s",
+          " Flow IAT Mean",
+          " Flow IAT Std",
+          " Flow IAT Max",
+          " Flow IAT Min",
+          "Fwd IAT Total",
+          " Fwd IAT Mean",
+          " Fwd IAT Std",
+          " Fwd IAT Max",
+          " Fwd IAT Min",
+          "Bwd IAT Total",
+          " Bwd IAT Mean",
+          " Bwd IAT Std",
+          " Bwd IAT Max",
+          " Bwd IAT Min",
+          "Fwd PSH Flags",
+          " Bwd PSH Flags",
+          " Fwd URG Flags",
+          " Bwd URG Flags",
+          " Fwd Header Length",
+          " Bwd Header Length",
+          "Fwd Packets/s",
+          " Bwd Packets/s",
+          " Min Packet Length",
+          " Max Packet Length",
+          " Packet Length Mean",
+          " Packet Length Std",
+          " Packet Length Variance",
+          "FIN Flag Count",
+          " SYN Flag Count",
+          " RST Flag Count",
+          " PSH Flag Count",
+          " ACK Flag Count",
+          " URG Flag Count",
+          " CWE Flag Count",
+          " ECE Flag Count",
+          " Down/Up Ratio",
+          " Average Packet Size",
+          " Avg Fwd Segment Size",
+          " Avg Bwd Segment Size",
+          " Fwd Header Length.1",
+          "Fwd Avg Bytes/Bulk",
+          " Fwd Avg Packets/Bulk",
+          " Fwd Avg Bulk Rate",
+          " Bwd Avg Bytes/Bulk",
+          " Bwd Avg Packets/Bulk",
+          "Bwd Avg Bulk Rate",
+          "Subflow Fwd Packets",
+          " Subflow Fwd Bytes",
+          " Subflow Bwd Packets",
+          " Subflow Bwd Bytes",
+          "Init_Win_bytes_forward",
+          " Init_Win_bytes_backward",
+          " act_data_pkt_fwd",
+          " min_seg_size_forward",
+          "Active Mean",
+          " Active Std",
+          " Active Max",
+          " Active Min",
+          "Idle Mean",
+          " Idle Std",
+          " Idle Max",
+          " Idle Min",
+          " Label"
+        ],
+        "target_columns": [
+          "Binary_Label",
+          "Attack_Category",
+          "Attack_Category_Numeric",
+          "Attack_Type_Numeric"
+        ],
+        "binary_target": "Binary_Label",
+        "category_target": "Attack_Category_Numeric",
+        "attack_type_target": "Attack_Type_Numeric",
+        "saved_path": "data_preprocessing\\processed_data\\processed_Tuesday-WorkingHours.pcap_ISCX.csv"
+      }
+    },
+    "cleaned_Wednesday-workingHours.pcap_ISCX.csv": {
+      "original_shape": [
+        419924,
+        79
+      ],
+      "original_labels": {
+        "DoS Hulk": 231073,
+        "BENIGN": 176432,
+        "DoS slowloris": 5796,
+        "DoS Slowhttptest": 5499,
+        "DoS GoldenEye": 1124
+      },
+      "attack_category_mapping": {
+        "Other": 243492,
+        "Normal": 176432
+      },
+      "binary_label_distribution": {
+        "1": 243492,
+        "0": 176432
+      },
+      "normal_samples": 176432,
+      "anomaly_samples": 243492,
+      "anomaly_percentage": 57.98,
+      "label_processing_actions": [
+        "Mapped 5 original label types",
+        "Created 2 attack categories",
+        "Converted to binary classification: Normal vs Anomaly",
+        "Created multi-class labels for attack categories",
+        "Anomaly rate: 57.98%"
+      ],
+      "raw_labels": "0         BENIGN\n1         BENIGN\n2         BENIGN\n3         BENIGN\n4         BENIGN\n           ...  \n419919    BENIGN\n419920    BENIGN\n419921    BENIGN\n419922    BENIGN\n419923    BENIGN\nName:  Label, Length: 419924, dtype: object",
+      "binary_labels": "0         0\n1         0\n2         0\n3         0\n4         0\n         ..\n419919    0\n419920    0\n419921    0\n419922    0\n419923    0\nName:  Label, Length: 419924, dtype: int64",
+      "attack_categories": "0         Normal\n1         Normal\n2         Normal\n3         Normal\n4         Normal\n           ...  \n419919    Normal\n419920    Normal\n419921    Normal\n419922    Normal\n419923    Normal\nName:  Label, Length: 419924, dtype: object",
+      "category_numeric": "[0 0 0 ... 0 0 0]",
+      "attack_type_numeric": "[0 0 0 ... 0 0 0]",
+      "category_encoder": "LabelEncoder()",
+      "attack_type_encoder": "LabelEncoder()",
+      "category_mapping": {
+        "Normal": "0",
+        "Other": "1"
+      },
+      "attack_type_mapping": {
+        "BENIGN": "0",
+        "DoS slowloris": "4",
+        "DoS Slowhttptest": "3",
+        "DoS Hulk": "2",
+        "DoS GoldenEye": "1"
+      },
+      "label_validation": {
+        "has_null_labels": "0",
+        "unique_binary_labels": 2,
+        "binary_label_range": [
+          0,
+          1
+        ],
+        "label_consistency": "True",
+        "total_samples": 419924
+      },
+      "class_balance_analysis": {
+        "normal_percentage": 42.02,
+        "anomaly_percentage": 57.98,
+        "imbalance_ratio": 1.38,
+        "balance_status": "Well Balanced",
+        "recommendations": [
+          "High anomaly rate - verify data quality and labeling"
+        ]
+      },
+      "final_dataset": {
+        "filename": "processed_Wednesday-workingHours.pcap_ISCX.csv",
+        "shape": [
+          419924,
+          83
+        ],
+        "features": [
+          " Destination Port",
+          " Flow Duration",
+          " Total Fwd Packets",
+          " Total Backward Packets",
+          "Total Length of Fwd Packets",
+          " Total Length of Bwd Packets",
+          " Fwd Packet Length Max",
+          " Fwd Packet Length Min",
+          " Fwd Packet Length Mean",
+          " Fwd Packet Length Std",
+          "Bwd Packet Length Max",
+          " Bwd Packet Length Min",
+          " Bwd Packet Length Mean",
+          " Bwd Packet Length Std",
+          "Flow Bytes/s",
+          " Flow Packets/s",
+          " Flow IAT Mean",
+          " Flow IAT Std",
+          " Flow IAT Max",
+          " Flow IAT Min",
+          "Fwd IAT Total",
+          " Fwd IAT Mean",
+          " Fwd IAT Std",
+          " Fwd IAT Max",
+          " Fwd IAT Min",
+          "Bwd IAT Total",
+          " Bwd IAT Mean",
+          " Bwd IAT Std",
+          " Bwd IAT Max",
+          " Bwd IAT Min",
+          "Fwd PSH Flags",
+          " Bwd PSH Flags",
+          " Fwd URG Flags",
+          " Bwd URG Flags",
+          " Fwd Header Length",
+          " Bwd Header Length",
+          "Fwd Packets/s",
+          " Bwd Packets/s",
+          " Min Packet Length",
+          " Max Packet Length",
+          " Packet Length Mean",
+          " Packet Length Std",
+          " Packet Length Variance",
+          "FIN Flag Count",
+          " SYN Flag Count",
+          " RST Flag Count",
+          " PSH Flag Count",
+          " ACK Flag Count",
+          " URG Flag Count",
+          " CWE Flag Count",
+          " ECE Flag Count",
+          " Down/Up Ratio",
+          " Average Packet Size",
+          " Avg Fwd Segment Size",
+          " Avg Bwd Segment Size",
+          " Fwd Header Length.1",
+          "Fwd Avg Bytes/Bulk",
+          " Fwd Avg Packets/Bulk",
+          " Fwd Avg Bulk Rate",
+          " Bwd Avg Bytes/Bulk",
+          " Bwd Avg Packets/Bulk",
+          "Bwd Avg Bulk Rate",
+          "Subflow Fwd Packets",
+          " Subflow Fwd Bytes",
+          " Subflow Bwd Packets",
+          " Subflow Bwd Bytes",
+          "Init_Win_bytes_forward",
+          " Init_Win_bytes_backward",
+          " act_data_pkt_fwd",
+          " min_seg_size_forward",
+          "Active Mean",
+          " Active Std",
+          " Active Max",
+          " Active Min",
+          "Idle Mean",
+          " Idle Std",
+          " Idle Max",
+          " Idle Min",
+          " Label"
+        ],
+        "target_columns": [
+          "Binary_Label",
+          "Attack_Category",
+          "Attack_Category_Numeric",
+          "Attack_Type_Numeric"
+        ],
+        "binary_target": "Binary_Label",
+        "category_target": "Attack_Category_Numeric",
+        "attack_type_target": "Attack_Type_Numeric",
+        "saved_path": "data_preprocessing\\processed_data\\processed_Wednesday-workingHours.pcap_ISCX.csv"
+      }
+    }
+  },
+  "label_processing_statistics": {
+    "label_processing_timestamp": "2026-01-29T17:59:50.478763",
+    "dataset_summary": {
+      "total_files_processed": 8,
+      "total_samples": 1622672,
+      "total_normal_samples": 1174675,
+      "total_anomaly_samples": 447997,
+      "overall_anomaly_rate": 27.61
+    },
+    "processing_summary": {
+      "label_conversion": "Multi-class to Binary (Normal vs Anomaly)",
+      "attack_categories": 27,
+      "binary_mapping": {
+        "Normal": 0,
+        "Anomaly": 1
+      },
+      "most_common_balance_status": "Severely Imbalanced"
+    },
+    "quality_assessment": {
+      "data_ready_for_ml": true,
+      "binary_classification_ready": true,
+      "anomaly_detection_ready": true,
+      "class_balance_needs_attention": true
+    },
+    "recommendations": [
+      "Consider class balancing techniques (SMOTE, undersampling)",
+      "Very low anomaly rate - consider anomaly detection specific techniques",
+      "High anomaly rate - verify data quality and labeling"
+    ]
+  }
+}
