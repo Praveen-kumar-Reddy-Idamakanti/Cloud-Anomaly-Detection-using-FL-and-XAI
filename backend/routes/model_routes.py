@@ -10,6 +10,8 @@ from datetime import datetime
 from models.schemas import (
     AnomalyDetectionRequest, 
     AnomalyDetectionResponse, 
+    EnhancedDetectionRequest,
+    EnhancedDetectionResponse,
     ModelInfo,
     HealthResponse,
     RootResponse
@@ -25,6 +27,24 @@ def get_model_info() -> ModelInfo:
     
     info = model_service.get_model_info()
     return ModelInfo(**info)
+
+
+def detect_anomalies_enhanced(request: EnhancedDetectionRequest) -> EnhancedDetectionResponse:
+    """Detect anomalies using two-stage prediction with attack type classification."""
+    if not model_service.is_model_loaded():
+        raise HTTPException(status_code=404, detail="No model loaded")
+    
+    try:
+        # Convert input to numpy array
+        features = np.array(request.features, dtype=np.float32)
+        
+        # Detect anomalies using two-stage prediction
+        results = model_service.detect_anomalies_two_stage(features, request.threshold)
+        
+        return EnhancedDetectionResponse(**results)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def detect_anomalies(request: AnomalyDetectionRequest) -> AnomalyDetectionResponse:

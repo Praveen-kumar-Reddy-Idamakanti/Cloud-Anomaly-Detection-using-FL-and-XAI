@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -28,6 +28,7 @@ const Dashboard: React.FC = () => {
   const [anomalies, setAnomalies] = useState<AnomalyData[]>([]);
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesData[]>([]);
   const [newAnomalyAlert, setNewAnomalyAlert] = useState<AnomalyData | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
     // Fetch initial dashboard data
@@ -55,9 +56,11 @@ const Dashboard: React.FC = () => {
 
     fetchDashboardData();
 
-    // Subscribe to real-time updates
-    const unsubscribe = realtimeApi.subscribeToRealTimeUpdates(({ anomaly }) => { // Removed 'log'
-      if (anomaly) {
+    // Subscribe to real-time updates using SSE
+    const handleRealtimeUpdate = (update: any) => {
+      if (update.type === 'anomaly_detected' && update.data.anomaly) {
+        const anomaly = update.data.anomaly;
+        
         // Update anomalies list
         setAnomalies(prev => [anomaly, ...prev.slice(0, 4)]);
         
@@ -74,11 +77,17 @@ const Dashboard: React.FC = () => {
         setNewAnomalyAlert(anomaly);
         setTimeout(() => setNewAnomalyAlert(null), 5000);
       }
-    });
+    };
+
+    // Connect to real-time stream
+    eventSourceRef.current = realtimeApi.connectToStream(handleRealtimeUpdate);
 
     return () => {
       // Clean up real-time subscription
-      unsubscribe();
+      if (eventSourceRef.current) {
+        realtimeApi.disconnectStream(eventSourceRef.current);
+        eventSourceRef.current = null;
+      }
     };
   }, [navigate]);
 

@@ -1,11 +1,19 @@
 """
-Database service for handling Supabase operations.
+Database service for handling database operations.
 """
 
 import logging
 import traceback
+import os
+import sys
 from typing import List, Dict, Any, Optional
 import numpy as np
+
+# Add project root to Python path to import database setup
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(project_root)
+
+from database.sqlite_setup import SQLiteSetup
 
 # Try to import Supabase client, fall back to mock if not available
 try:
@@ -14,7 +22,7 @@ try:
     SUPABASE_AVAILABLE = True
 except ImportError:
     SUPABASE_AVAILABLE = False
-    logging.warning("Supabase modules not available, using mock implementations")
+    logging.warning("Supabase modules not available, using SQLite database")
 
 logger = logging.getLogger(__name__)
 
@@ -24,24 +32,27 @@ class DatabaseService:
     
     def __init__(self):
         self.supabase: Optional[Any] = None
+        self.sqlite_db: Optional[SQLiteSetup] = None
         self._initialize_client()
     
     def _initialize_client(self):
-        """Initialize the Supabase client."""
+        """Initialize the database client."""
         if not SUPABASE_AVAILABLE:
-            logger.warning("Supabase not available - using mock database")
+            logger.warning("Supabase not available - using SQLite database")
+            self.sqlite_db = SQLiteSetup()
             return
         
         try:
             self.supabase = get_supabase_client()
             logger.info("Supabase client initialized successfully.")
         except ValueError as e:
-            logger.warning(f"Failed to initialize Supabase client: {e}. Some endpoints will not work.")
+            logger.warning(f"Failed to initialize Supabase client: {e}. Falling back to SQLite.")
             self.supabase = None
+            self.sqlite_db = SQLiteSetup()
     
     def is_connected(self) -> bool:
         """Check if database connection is available."""
-        return self.supabase is not None or not SUPABASE_AVAILABLE
+        return self.supabase is not None or self.sqlite_db is not None
     
     def get_system_stats(self) -> Dict[str, Any]:
         """
@@ -53,8 +64,66 @@ class DatabaseService:
         if not self.is_connected():
             raise ValueError("Database connection not available")
         
+        if self.sqlite_db:
+            # Use SQLite database
+            try:
+                conn = self.sqlite_db.connect()
+                cursor = conn.cursor()
+                
+                # Get system stats from the system_stats table
+                cursor.execute('SELECT * FROM system_stats WHERE id = 1')
+                system_stats = cursor.fetchone()
+                
+                if system_stats:
+                    return {
+                        "total_logs": system_stats['total_logs'],
+                        "total_anomalies": system_stats['total_anomalies'],
+                        "critical_anomalies": system_stats['critical_anomalies'],
+                        "high_anomalies": system_stats['high_anomalies'],
+                        "medium_anomalies": system_stats['medium_anomalies'],
+                        "low_anomalies": system_stats['low_anomalies'],
+                        "alert_rate": system_stats['alert_rate'],
+                        "avg_confidence": system_stats['avg_confidence']
+                    }
+                else:
+                    # If no system stats exist, calculate from anomalies table
+                    cursor.execute('SELECT severity, confidence FROM anomalies')
+                    anomalies = cursor.fetchall()
+                    
+                    total_anomalies = len(anomalies)
+                    critical_anomalies = sum(1 for a in anomalies if a['severity'] == 'critical')
+                    high_anomalies = sum(1 for a in anomalies if a['severity'] == 'high')
+                    medium_anomalies = sum(1 for a in anomalies if a['severity'] == 'medium')
+                    low_anomalies = sum(1 for a in anomalies if a['severity'] == 'low')
+                    
+                    # Get total logs from logs table
+                    cursor.execute('SELECT COUNT(*) as count FROM logs')
+                    logs_result = cursor.fetchone()
+                    total_logs = logs_result['count'] if logs_result else 0
+                    
+                    avg_confidence = np.mean([a['confidence'] for a in anomalies]) if total_anomalies > 0 else 0.0
+                    alert_rate = round((total_anomalies / total_logs) * 100, 2) if total_logs > 0 else 0.0
+                    
+                    return {
+                        "total_logs": total_logs,
+                        "total_anomalies": total_anomalies,
+                        "critical_anomalies": critical_anomalies,
+                        "high_anomalies": high_anomalies,
+                        "medium_anomalies": medium_anomalies,
+                        "low_anomalies": low_anomalies,
+                        "alert_rate": alert_rate,
+                        "avg_confidence": round(float(avg_confidence), 2)
+                    }
+                    
+            except Exception as e:
+                logger.error(f"Failed to get stats from SQLite: {e}")
+                traceback.print_exc()
+                raise ValueError("Failed to retrieve system statistics.")
+            finally:
+                self.sqlite_db.close()
+        
         if not SUPABASE_AVAILABLE:
-            # Mock implementation
+            # Mock implementation (should not reach here with SQLite)
             return {
                 "total_logs": 1000,
                 "total_anomalies": 50,
@@ -111,6 +180,29 @@ class DatabaseService:
         if not self.is_connected():
             raise ValueError("Database connection not available")
         
+        if self.sqlite_db:
+            # Use SQLite database
+            try:
+                conn = self.sqlite_db.connect()
+                cursor = conn.cursor()
+                
+                cursor.execute('SELECT server_round, avg_loss, std_loss, avg_accuracy, created_at FROM training_runs ORDER BY server_round ASC')
+                training_runs = cursor.fetchall()
+                
+                # Convert Row objects to dictionaries
+                result = []
+                for run in training_runs:
+                    result.append(dict(run))
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"Failed to get training history from SQLite: {e}")
+                traceback.print_exc()
+                raise ValueError("Failed to retrieve training history.")
+            finally:
+                self.sqlite_db.close()
+        
         if not SUPABASE_AVAILABLE:
             # Mock implementation
             return [
@@ -149,6 +241,30 @@ class DatabaseService:
         if not self.is_connected():
             raise ValueError("Database connection not available")
         
+        if self.sqlite_db:
+            # Use SQLite database
+            try:
+                conn = self.sqlite_db.connect()
+                cursor = conn.cursor()
+                
+                start_index = (page - 1) * limit
+                cursor.execute('SELECT * FROM anomalies ORDER BY timestamp DESC LIMIT ? OFFSET ?', (limit, start_index))
+                anomalies = cursor.fetchall()
+                
+                # Convert Row objects to dictionaries
+                result = []
+                for anomaly in anomalies:
+                    result.append(dict(anomaly))
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"Failed to get anomalies from SQLite: {e}")
+                traceback.print_exc()
+                raise ValueError("Failed to retrieve anomalies.")
+            finally:
+                self.sqlite_db.close()
+        
         if not SUPABASE_AVAILABLE:
             # Mock implementation
             return []
@@ -177,8 +293,29 @@ class DatabaseService:
         if not self.is_connected():
             raise ValueError("Database connection not available")
         
+        if self.sqlite_db:
+            # Use SQLite database
+            try:
+                conn = self.sqlite_db.connect()
+                cursor = conn.cursor()
+                
+                cursor.execute('SELECT * FROM anomalies WHERE id = ?', (anomaly_id,))
+                anomaly = cursor.fetchone()
+                
+                if anomaly is None:
+                    raise ValueError("Anomaly not found")
+                
+                return dict(anomaly)
+                
+            except Exception as e:
+                logger.error(f"Failed to get anomaly {anomaly_id} from SQLite: {e}")
+                traceback.print_exc()
+                raise ValueError("Failed to retrieve anomaly.")
+            finally:
+                self.sqlite_db.close()
+        
         if not SUPABASE_AVAILABLE:
-            # Mock implementation
+            # Mock implementation (should not reach here with SQLite)
             raise ValueError("Anomaly not found")
         
         try:

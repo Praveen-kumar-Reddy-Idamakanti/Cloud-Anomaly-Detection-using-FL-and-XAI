@@ -32,18 +32,22 @@ const XAIExplanation: React.FC = () => {
         // Extract features from anomaly details
         let features: number[] | null = null;
         try {
-            const detailsJson = JSON.parse(anomalyData.details);
-            features = detailsJson.feature_values;
+          // Features are stored in the 'features' field as JSON string
+          if (anomalyData.features) {
+            features = JSON.parse(anomalyData.features);
+          }
         } catch (parseError) {
-            console.error("Failed to parse anomaly details for features:", parseError);
+          console.error("Failed to parse anomaly features:", parseError);
         }
 
         if (!features) {
-            toast.error('Anomaly features not found for explanation.');
-            setExplanation(null);
-            setIsLoading(false);
-            return;
+          toast.error('Anomaly features not found for explanation.');
+          setExplanation(null);
+          setIsLoading(false);
+          return;
         }
+
+        console.log('Extracted features:', features.length, 'features');
 
         // Fetch explanation using the new API
         try {
@@ -232,7 +236,7 @@ const XAIExplanation: React.FC = () => {
                       {explanation && (
                         <div>
                           <p className="text-sm text-muted-foreground">Model Type</p>
-                          <p className="text-sm">{explanation.modelType}</p>
+                          <p className="text-sm">{explanation.model_type}</p>
                         </div>
                       )}
                     </div>

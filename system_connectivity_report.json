@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-01-29T23:56:38.880782",
+  "checks": {
+    "check_backend_api": {
+      "status": "FAIL",
+      "message": "Connection failed: HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+    },
+    "check_ai_model_service": {
+      "status": "FAIL",
+      "message": "Connection failed: HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=10)"
+    },
+    "check_xai_integration": {
+      "status": "FAIL",
+      "message": "Connection failed: HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=15)"
+    },
+    "check_database_connectivity": {
+      "status": "FAIL",
+      "message": "Database file not found"
+    },
+    "check_model_artifacts": {
+      "status": "ERROR",
+      "message": "'os.stat_result' object has no attribute 'size'"
+    },
+    "check_frontend_config": {
+      "status": "PASS",
+      "message": "Frontend configuration found",
+      "package_name": "federated-anomaly-detection-frontend",
+      "dependencies": 49,
+      "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "build:dev": "vite build --mode development",
+        "build:prod": "vite build --mode production",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "preview": "vite preview",
+        "type-check": "tsc --noEmit"
+      }
+    },
+    "check_api_endpoints": {
+      "status": "FAIL",
+      "message": "0/6 endpoints working",
+      "endpoints": {
+        "/health": {
+          "status": "FAIL",
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+        },
+        "/model/info": {
+          "status": "FAIL",
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+        },
+        "/stats": {
+          "status": "FAIL",
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+        },
+        "/anomalies": {
+          "status": "FAIL",
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+        },
+        "/logs": {
+          "status": "FAIL",
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+        },
+        "/model/detect-enhanced": {
+          "status": "FAIL",
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=10)"
+        }
+      }
+    },
+    "check_real_time_features": {
+      "status": "FAIL",
+      "message": "Real-time features error: HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+    },
+    "check_end_to_end_flow": {
+      "status": "FAIL",
+      "message": "End-to-end flow failed: HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=10)"
+    }
+  }
+}

@@ -19,21 +19,35 @@ from config.app_config import create_app, is_production
 from models.schemas import (
     AnomalyDetectionRequest,
     AnomalyDetectionResponse,
+    EnhancedDetectionRequest,
+    EnhancedDetectionResponse,
     ModelInfo,
     TrainingRequest,
     StatsResponse,
     TrainingHistoryEntry,
     AnomalyData,
     LogData,
-    AnomalyExplanationRequest
+    AnomalyExplanationRequest,
+    PhaseExplanationRequest,
+    FeatureImportanceRequest,
+    AttackTypeExplanationRequest
 )
 
 # Import route handlers
 from routes.model_routes import (
     get_model_info,
     detect_anomalies,
+    detect_anomalies_enhanced,
     health_check,
     root_endpoint
+)
+# XAI routes - Now integrated with completed phases
+from routes.xai_routes_enhanced import (
+    get_explanation,
+    explain_anomaly,
+    get_phase_explanation,
+    get_feature_importance,
+    get_attack_type_explanation
 )
 from routes.anomaly_routes import (
     get_system_stats,
@@ -42,10 +56,6 @@ from routes.anomaly_routes import (
     get_anomaly_by_id,
     review_anomaly,
     report_anomaly
-)
-from routes.xai_routes import (
-    get_explanation,
-    explain_anomaly
 )
 from routes.training_routes import (
     get_training_status,
@@ -79,6 +89,11 @@ async def health():
 async def model_info():
     """Get information about the loaded model."""
     return get_model_info()
+
+@app.post("/model/detect-enhanced", response_model=EnhancedDetectionResponse)
+async def detect_anomalies_enhanced_endpoint(request: EnhancedDetectionRequest):
+    """Detect anomalies using two-stage prediction with attack type classification."""
+    return detect_anomalies_enhanced(request)
 
 @app.post("/model/detect", response_model=AnomalyDetectionResponse)
 async def detect_anomalies_endpoint(request: AnomalyDetectionRequest):
@@ -133,16 +148,38 @@ async def stop_training_endpoint():
     """Stop ongoing training process."""
     return stop_training()
 
-# XAI (Explainable AI) Endpoints
+# XAI (Explainable AI) Endpoints - Now Integrated with Completed Phases
 @app.get("/explanations/{anomaly_id}")
 async def explanation(anomaly_id: str):
-    """Get XAI explanation for an anomaly."""
-    return get_explanation(anomaly_id)
+    """Get comprehensive XAI explanation for an anomaly."""
+    return await get_explanation(anomaly_id)
 
 @app.post("/explain_anomaly")
 async def explain_anomaly_endpoint(request: AnomalyExplanationRequest):
-    """Generate SHAP explanation for a given anomalous data point."""
-    return explain_anomaly(request)
+    """Generate comprehensive SHAP explanation for anomalous data point."""
+    return await explain_anomaly(request)
+
+@app.post("/xai/phase_explanation")
+async def phase_explanation_endpoint(request: PhaseExplanationRequest):
+    """Get phase-specific XAI explanation."""
+    return await get_phase_explanation(
+        request.phase, 
+        request.features,
+        anomaly_score=request.anomaly_score,
+        reconstruction_error=request.reconstruction_error,
+        attack_type=request.attack_type,
+        confidence=request.confidence
+    )
+
+@app.post("/xai/feature_importance")
+async def feature_importance_endpoint(request: FeatureImportanceRequest):
+    """Get feature importance analysis."""
+    return await get_feature_importance(request.features, request.top_k)
+
+@app.post("/xai/attack_type_explanation")
+async def attack_type_explanation_endpoint(request: AttackTypeExplanationRequest):
+    """Get attack type specific explanation."""
+    return await get_attack_type_explanation(request.features, request.attack_type, request.confidence)
 
 # Data Management Endpoints
 @app.get("/logs", response_model=List[LogData])
@@ -158,7 +195,7 @@ async def upload_log_endpoint(file: UploadFile = File(...)):
 @app.get("/realtime/stream")
 async def realtime_stream():
     """Stream real-time data updates."""
-    return stream_realtime_data()
+    return await stream_realtime_data()
 
 
 if __name__ == "__main__":

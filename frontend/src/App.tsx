@@ -12,6 +12,7 @@ import Anomalies from "./pages/Anomalies";
 import Analytics from "./pages/Analytics";
 import ModelManagement from "./pages/ModelManagement";
 import Upload from "./pages/Upload";
+import { DetectionPage } from "./pages/DetectionPage";
 import XAI from "./pages/XAI";
 import XAIExplanation from "./pages/XAIExplanation";
 import NotFound from "./pages/NotFound";
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/models" element={<ModelManagement />} />
             <Route path="/upload" element={<Upload />} />
+            <Route path="/detect" element={<DetectionPage />} />
             <Route path="/explanations" element={<XAI />} />
             <Route path="/explanations/:id" element={<XAIExplanation />} />
             <Route path="*" element={<NotFound />} />

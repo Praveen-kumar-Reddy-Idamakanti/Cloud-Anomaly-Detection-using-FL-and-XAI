@@ -4,6 +4,11 @@ export const API_CONFIG = {
   TIMEOUT: 30000, // Increased timeout for production
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
+  MODEL_CONFIG: {
+    INPUT_DIMENSIONS: 78,
+    DEFAULT_THRESHOLD: 0.22610116,
+    ATTACK_TYPES: ['BENIGN', 'DoS GoldenEye', 'DoS Hulk', 'DoS Slowhttptest', 'DoS slowloris']
+  }
 };
 
 // Environment configuration

@@ -9,7 +9,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { logsApi } from '../../api/api';
-import { supabase } from '@/integrations/supabase/client';
 
 const LogUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
