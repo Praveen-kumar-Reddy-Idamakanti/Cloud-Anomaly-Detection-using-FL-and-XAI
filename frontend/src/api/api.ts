@@ -160,6 +160,8 @@ export type StatData = {
 export type FeatureImportance = {
   feature: string;
   importance: number;
+  shap_value?: number; // SHAP value for the feature
+  direction?: string; // Direction of impact (positive/negative)
 };
 
 export type ExplanationData = {
@@ -167,6 +169,8 @@ export type ExplanationData = {
   explanation_type: string; // The backend returns 'SHAP'
   feature_importances: FeatureImportance[];
   note: string;
+  contributingFactors?: string[]; // Optional contributing factors
+  recommendations?: string[]; // Optional recommendations
 };
 
 export type TimeSeriesData = {
@@ -297,6 +301,7 @@ export const anomaliesApi = {
       confidence: data.confidence,
       reviewed: data.reviewed,
       details: data.details,
+      features: data.features,  // Add this line to include features
     };
   },
   
@@ -342,22 +347,99 @@ export const logsApi = {
 // XAI Explanations API - Now Integrated with Completed Phases
 export const explanationsApi = {
   getAnomalyExplanation: async (features: number[]): Promise<ExplanationData> => {
-    const data = await apiCall('/explain_anomaly', {
-      method: 'POST',
-      body: JSON.stringify({ features }),
-    });
+    console.log('=== FRONTEND: getAnomalyExplanation API CALL ===');
+    console.log('Features length:', features.length);
+    console.log('Features sample:', features.slice(0, 5));
     
-    return {
-      model_type: data.model_type,
-      explanation_type: data.explanation_type,
-      feature_importances: data.feature_importances,
-      note: data.note,
-    };
+    try {
+      const data = await apiCall('/explain_anomaly', {
+        method: 'POST',
+        body: JSON.stringify({ features }),
+      });
+      
+      console.log('=== BACKEND RESPONSE RECEIVED ===');
+      console.log('Response type:', typeof data);
+      console.log('Response keys:', Object.keys(data));
+      console.log('Comprehensive explanation:', data.comprehensive_explanation);
+      console.log('Anomaly detected:', data.anomaly_detected);
+      console.log('Phase1 available:', 'phase1' in data);
+      console.log('Phase2 available:', 'phase2' in data);
+      console.log('Phase3 available:', 'phase3' in data);
+      
+      // Handle the new comprehensive explanation structure
+      if (data.comprehensive_explanation) {
+        console.log('=== PROCESSING COMPREHENSIVE EXPLANATION ===');
+        
+        // Extract feature importances from phase2 (SHAP-based)
+        const featureImportances = data.phase2?.feature_importance || [];
+        console.log('Feature importances from phase2:', featureImportances.length);
+        
+        const mappedImportances = featureImportances.map((item: any) => {
+          console.log('Mapping feature importance:', item);
+          return {
+            feature: item.feature_name || `feature_${item.feature_index}`,
+            importance: item.importance,
+            shap_value: item.shap_value,
+            direction: item.direction
+          };
+        });
+        
+        const contributingFactors = data.phase1?.explanation?.key_features?.map((idx: number) => `Feature ${idx} contributed to anomaly detection`) || [];
+        const recommendations = data.phase3?.explanation?.predicted_attack ? [
+          `Investigate potential ${data.phase3.explanation.predicted_attack} attack`,
+          'Monitor source and destination IPs',
+          'Review network traffic patterns'
+        ] : [
+          'Continue monitoring network traffic',
+          'Review system logs for unusual patterns'
+        ];
+        
+        const result = {
+          model_type: data.model_type || 'Autoencoder',
+          explanation_type: data.explanation_type || 'comprehensive',
+          feature_importances: mappedImportances,
+          note: `Anomaly detected: ${data.anomaly_detected}. Reconstruction error: ${data.reconstruction_error?.toFixed(4)}`,
+          contributingFactors,
+          recommendations
+        };
+        
+        console.log('=== MAPPED EXPLANATION DATA ===');
+        console.log('Model type:', result.model_type);
+        console.log('Explanation type:', result.explanation_type);
+        console.log('Feature importances count:', result.feature_importances.length);
+        console.log('Contributing factors count:', result.contributingFactors.length);
+        console.log('Recommendations count:', result.recommendations.length);
+        console.log('=== FRONTEND API CALL SUCCESS ===');
+        
+        return result;
+      }
+      
+      // Fallback to old structure or mock
+      console.log('=== USING FALLBACK STRUCTURE ===');
+      const fallbackResult = {
+        model_type: data.model_type || 'Autoencoder',
+        explanation_type: data.explanation_type || 'SHAP',
+        feature_importances: data.feature_importances || [],
+        note: data.note || 'Explanation generated successfully'
+      };
+      
+      console.log('Fallback result:', fallbackResult);
+      return fallbackResult;
+      
+    } catch (error: any) {
+      console.error('=== FRONTEND API ERROR ===');
+      console.error('Error:', error);
+      console.error('Error message:', error.message);
+      console.error('Error status:', error.status);
+      console.error('Error details:', error.details);
+      throw error;
+    }
   },
   
   // Phase-specific explanations
   getPhaseExplanation: async (phase: string, features: number[], options: any = {}) => {
     try {
+      // ... (rest of the code remains the same)
       const data = await apiCall('/xai/phase_explanation', {
         method: 'POST',
         body: JSON.stringify({ phase, features, ...options }),

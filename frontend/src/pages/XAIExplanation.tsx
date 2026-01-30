@@ -21,12 +21,19 @@ const XAIExplanation: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!id) return;
+      if (!id) {
+        console.log('=== XAI EXPLANATION PAGE: No ID provided ===');
+        return;
+      }
       
+      console.log('=== XAI EXPLANATION PAGE: Fetching data for ID ===', id);
       setIsLoading(true);
+      
       try {
         // Fetch anomaly details
+        console.log('=== FETCHING ANOMALY DETAILS ===');
         const anomalyData = await anomaliesApi.getAnomalyById(id);
+        console.log('Anomaly data received:', anomalyData);
         setAnomaly(anomalyData);
         
         // Extract features from anomaly details
@@ -34,33 +41,51 @@ const XAIExplanation: React.FC = () => {
         try {
           // Features are stored in the 'features' field as JSON string
           if (anomalyData.features) {
+            console.log('Parsing features from anomaly data...');
             features = JSON.parse(anomalyData.features);
+            console.log('Features parsed successfully:', features.length, 'features');
+          } else {
+            console.log('No features field in anomaly data');
           }
         } catch (parseError) {
           console.error("Failed to parse anomaly features:", parseError);
         }
 
         if (!features) {
+          console.error('No features available for explanation');
           toast.error('Anomaly features not found for explanation.');
           setExplanation(null);
           setIsLoading(false);
           return;
         }
 
-        console.log('Extracted features:', features.length, 'features');
+        console.log('=== CALLING EXPLANATION API ===');
+        console.log('Features length:', features.length);
+        console.log('Features sample:', features.slice(0, 5));
 
         // Fetch explanation using the new API
         try {
           const explanationData = await explanationsApi.getAnomalyExplanation(features);
+          console.log('=== EXPLANATION DATA RECEIVED ===');
+          console.log('Explanation data:', explanationData);
+          console.log('Feature importances count:', explanationData.feature_importances?.length || 0);
+          console.log('Model type:', explanationData.model_type);
+          console.log('Explanation type:', explanationData.explanation_type);
           setExplanation(explanationData);
         } catch (error: any) {
+          console.error("=== EXPLANATION API ERROR ===");
           console.error("Failed to fetch explanation:", error);
+          console.error("Error message:", error.message);
+          console.error("Error details:", error.details);
           setExplanation(null);
         }
       } catch (error: any) {
+        console.error('=== ANOMALY FETCH ERROR ===');
+        console.error("Failed to fetch anomaly data:", error);
         toast.error(error.message || 'Failed to fetch anomaly data');
         setAnomaly(null);
       } finally {
+        console.log('=== FETCH COMPLETED ===');
         setIsLoading(false);
       }
     };
