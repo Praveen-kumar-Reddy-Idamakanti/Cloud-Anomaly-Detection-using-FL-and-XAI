@@ -4,3 +4,5 @@ datasets/
 *.h5
 *.pt
 __pycache__/
+
+.env

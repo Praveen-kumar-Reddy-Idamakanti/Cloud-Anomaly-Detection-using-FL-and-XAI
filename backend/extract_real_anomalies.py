@@ -9,16 +9,15 @@ from pathlib import Path
 import numpy as np
 from datetime import datetime
 
-# Add project root to Python path
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
+# Import path configuration
+from config.app_config import path_config
 
 class RealAnomalyExtractor:
     """Extract real anomalies from CICIDS2017 datasets."""
     
     def __init__(self):
-        self.data_dir = project_root / "data_preprocessing" / "processed_data"
-        self.output_dir = project_root / "data"
+        self.data_dir = path_config.data_preprocessing_path / "processed_data"
+        self.output_dir = path_config.project_root / "data"
         self.output_dir.mkdir(exist_ok=True)
         
         # Attack type mapping based on filenames

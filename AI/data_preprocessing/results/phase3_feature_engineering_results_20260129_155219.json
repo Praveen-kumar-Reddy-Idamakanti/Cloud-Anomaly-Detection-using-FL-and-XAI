@@ -1,0 +1,562 @@
+{
+  "feature_engineering_results": {
+    "cleaned_Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv": {
+      "original_features": 79,
+      "constant_features_removed": 11,
+      "high_corr_features_removed": 28,
+      "final_selected_features": 30,
+      "selected_feature_list": [
+        1,
+        15,
+        37,
+        39,
+        9,
+        38,
+        12,
+        17,
+        14,
+        24,
+        16,
+        11,
+        18,
+        36,
+        34,
+        13,
+        35,
+        10,
+        20,
+        0,
+        30,
+        31,
+        22,
+        7,
+        3,
+        4,
+        23,
+        6,
+        5,
+        8
+      ],
+      "feature_selection_actions": [
+        "Removed 11 constant features",
+        "Removed 28 highly correlated features",
+        "Selected 30 most important features"
+      ],
+      "feature_transformations": {
+        "original_selected_features": 30,
+        "transformed_features": 40,
+        "transformations_applied": [
+          "Created 10 transformed features",
+          "Applied log transformation to 2 features",
+          "Applied sqrt transformation to 8 features"
+        ]
+      },
+      "feature_creation": {
+        "original_features": 79,
+        "engineered_features": 81,
+        "new_features_created": 2,
+        "engineered_feature_list": [
+          "Flag_Activity_Score",
+          "Active_Time_Ratio"
+        ]
+      },
+      "feature_scaling": {
+        "numeric_features_scaled": 81,
+        "categorical_features_preserved": 0,
+        "scaling_method": "MinMaxScaler (0-1)",
+        "final_feature_count": 81
+      }
+    },
+    "cleaned_Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv": {
+      "original_features": 79,
+      "constant_features_removed": 11,
+      "high_corr_features_removed": 22,
+      "final_selected_features": 30,
+      "selected_feature_list": [
+        12,
+        1,
+        16,
+        23,
+        21,
+        24,
+        19,
+        18,
+        22,
+        15,
+        20,
+        45,
+        14,
+        43,
+        41,
+        44,
+        17,
+        42,
+        13,
+        31,
+        26,
+        27,
+        0,
+        37,
+        38,
+        3,
+        29,
+        8,
+        4,
+        10
+      ],
+      "feature_selection_actions": [
+        "Removed 11 constant features",
+        "Removed 22 highly correlated features",
+        "Selected 30 most important features"
+      ],
+      "feature_transformations": {
+        "original_selected_features": 30,
+        "transformed_features": 32,
+        "transformations_applied": [
+          "Created 2 transformed features",
+          "Applied log transformation to 1 features",
+          "Applied sqrt transformation to 1 features"
+        ]
+      },
+      "feature_creation": {
+        "original_features": 79,
+        "engineered_features": 81,
+        "new_features_created": 2,
+        "engineered_feature_list": [
+          "Flag_Activity_Score",
+          "Active_Time_Ratio"
+        ]
+      },
+      "feature_scaling": {
+        "numeric_features_scaled": 81,
+        "categorical_features_preserved": 0,
+        "scaling_method": "MinMaxScaler (0-1)",
+        "final_feature_count": 81
+      }
+    },
+    "cleaned_Friday-WorkingHours-Morning.pcap_ISCX.csv": {
+      "original_features": 79,
+      "constant_features_removed": 11,
+      "high_corr_features_removed": 25,
+      "final_selected_features": 30,
+      "selected_feature_list": [
+        1,
+        12,
+        16,
+        41,
+        20,
+        18,
+        21,
+        19,
+        15,
+        14,
+        17,
+        42,
+        39,
+        37,
+        40,
+        38,
+        28,
+        13,
+        23,
+        0,
+        34,
+        35,
+        3,
+        2,
+        25,
+        8,
+        4,
+        10,
+        11,
+        27
+      ],
+      "feature_selection_actions": [
+        "Removed 11 constant features",
+        "Removed 25 highly correlated features",
+        "Selected 30 most important features"
+      ],
+      "feature_transformations": {
+        "original_selected_features": 30,
+        "transformed_features": 38,
+        "transformations_applied": [
+          "Created 8 transformed features",
+          "Applied log transformation to 2 features",
+          "Applied sqrt transformation to 6 features"
+        ]
+      },
+      "feature_creation": {
+        "original_features": 79,
+        "engineered_features": 81,
+        "new_features_created": 2,
+        "engineered_feature_list": [
+          "Flag_Activity_Score",
+          "Active_Time_Ratio"
+        ]
+      },
+      "feature_scaling": {
+        "numeric_features_scaled": 81,
+        "categorical_features_preserved": 0,
+        "scaling_method": "MinMaxScaler (0-1)",
+        "final_feature_count": 81
+      }
+    },
+    "cleaned_Monday-WorkingHours.pcap_ISCX.csv": {
+      "original_features": 79,
+      "constant_features_removed": 11,
+      "high_corr_features_removed": 23,
+      "final_selected_features": 30,
+      "selected_feature_list": [
+        1,
+        12,
+        16,
+        43,
+        23,
+        18,
+        20,
+        14,
+        17,
+        21,
+        19,
+        22,
+        15,
+        24,
+        44,
+        41,
+        39,
+        42,
+        40,
+        13,
+        30,
+        26,
+        0,
+        36,
+        37,
+        3,
+        2,
+        28,
+        8,
+        4
+      ],
+      "feature_selection_actions": [
+        "Removed 11 constant features",
+        "Removed 23 highly correlated features",
+        "Selected 30 most important features"
+      ],
+      "feature_transformations": {
+        "original_selected_features": 30,
+        "transformed_features": 33,
+        "transformations_applied": [
+          "Created 3 transformed features",
+          "Applied log transformation to 1 features",
+          "Applied sqrt transformation to 2 features"
+        ]
+      },
+      "feature_creation": {
+        "original_features": 79,
+        "engineered_features": 81,
+        "new_features_created": 2,
+        "engineered_feature_list": [
+          "Flag_Activity_Score",
+          "Active_Time_Ratio"
+        ]
+      },
+      "feature_scaling": {
+        "numeric_features_scaled": 81,
+        "categorical_features_preserved": 0,
+        "scaling_method": "MinMaxScaler (0-1)",
+        "final_feature_count": 81
+      }
+    },
+    "cleaned_Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv": {
+      "original_features": 79,
+      "constant_features_removed": 9,
+      "high_corr_features_removed": 26,
+      "final_selected_features": 30,
+      "selected_feature_list": [
+        12,
+        1,
+        16,
+        20,
+        42,
+        18,
+        19,
+        21,
+        15,
+        14,
+        17,
+        43,
+        40,
+        38,
+        41,
+        39,
+        13,
+        28,
+        24,
+        3,
+        0,
+        34,
+        35,
+        26,
+        8,
+        4,
+        10,
+        11,
+        27,
+        7
+      ],
+      "feature_selection_actions": [
+        "Removed 9 constant features",
+        "Removed 26 highly correlated features",
+        "Selected 30 most important features"
+      ],
+      "feature_transformations": {
+        "original_selected_features": 30,
+        "transformed_features": 35,
+        "transformations_applied": [
+          "Created 5 transformed features",
+          "Applied log transformation to 2 features",
+          "Applied sqrt transformation to 3 features"
+        ]
+      },
+      "feature_creation": {
+        "original_features": 79,
+        "engineered_features": 81,
+        "new_features_created": 2,
+        "engineered_feature_list": [
+          "Flag_Activity_Score",
+          "Active_Time_Ratio"
+        ]
+      },
+      "feature_scaling": {
+        "numeric_features_scaled": 81,
+        "categorical_features_preserved": 0,
+        "scaling_method": "MinMaxScaler (0-1)",
+        "final_feature_count": 81
+      }
+    },
+    "cleaned_Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv": {
+      "original_features": 79,
+      "constant_features_removed": 11,
+      "high_corr_features_removed": 26,
+      "final_selected_features": 30,
+      "selected_feature_list": [
+        12,
+        1,
+        16,
+        40,
+        20,
+        18,
+        19,
+        21,
+        14,
+        15,
+        17,
+        41,
+        38,
+        36,
+        39,
+        37,
+        27,
+        13,
+        23,
+        0,
+        33,
+        34,
+        3,
+        2,
+        25,
+        8,
+        4,
+        10,
+        11,
+        26
+      ],
+      "feature_selection_actions": [
+        "Removed 11 constant features",
+        "Removed 26 highly correlated features",
+        "Selected 30 most important features"
+      ],
+      "feature_transformations": {
+        "original_selected_features": 30,
+        "transformed_features": 37,
+        "transformations_applied": [
+          "Created 7 transformed features",
+          "Applied log transformation to 2 features",
+          "Applied sqrt transformation to 5 features"
+        ]
+      },
+      "feature_creation": {
+        "original_features": 79,
+        "engineered_features": 81,
+        "new_features_created": 2,
+        "engineered_feature_list": [
+          "Flag_Activity_Score",
+          "Active_Time_Ratio"
+        ]
+      },
+      "feature_scaling": {
+        "numeric_features_scaled": 81,
+        "categorical_features_preserved": 0,
+        "scaling_method": "MinMaxScaler (0-1)",
+        "final_feature_count": 81
+      }
+    },
+    "cleaned_Tuesday-WorkingHours.pcap_ISCX.csv": {
+      "original_features": 79,
+      "constant_features_removed": 11,
+      "high_corr_features_removed": 25,
+      "final_selected_features": 30,
+      "selected_feature_list": [
+        1,
+        12,
+        16,
+        20,
+        41,
+        18,
+        14,
+        17,
+        21,
+        19,
+        15,
+        42,
+        39,
+        37,
+        40,
+        38,
+        27,
+        13,
+        23,
+        0,
+        33,
+        34,
+        3,
+        25,
+        2,
+        8,
+        4,
+        10,
+        11,
+        26
+      ],
+      "feature_selection_actions": [
+        "Removed 11 constant features",
+        "Removed 25 highly correlated features",
+        "Selected 30 most important features"
+      ],
+      "feature_transformations": {
+        "original_selected_features": 30,
+        "transformed_features": 35,
+        "transformations_applied": [
+          "Created 5 transformed features",
+          "Applied log transformation to 2 features",
+          "Applied sqrt transformation to 3 features"
+        ]
+      },
+      "feature_creation": {
+        "original_features": 79,
+        "engineered_features": 81,
+        "new_features_created": 2,
+        "engineered_feature_list": [
+          "Flag_Activity_Score",
+          "Active_Time_Ratio"
+        ]
+      },
+      "feature_scaling": {
+        "numeric_features_scaled": 81,
+        "categorical_features_preserved": 0,
+        "scaling_method": "MinMaxScaler (0-1)",
+        "final_feature_count": 81
+      }
+    },
+    "cleaned_Wednesday-workingHours.pcap_ISCX.csv": {
+      "original_features": 79,
+      "constant_features_removed": 11,
+      "high_corr_features_removed": 29,
+      "final_selected_features": 30,
+      "selected_feature_list": [
+        1,
+        16,
+        9,
+        18,
+        12,
+        14,
+        17,
+        15,
+        19,
+        11,
+        38,
+        13,
+        24,
+        36,
+        34,
+        37,
+        35,
+        10,
+        21,
+        0,
+        31,
+        32,
+        3,
+        7,
+        2,
+        4,
+        23,
+        6,
+        5,
+        22
+      ],
+      "feature_selection_actions": [
+        "Removed 11 constant features",
+        "Removed 29 highly correlated features",
+        "Selected 30 most important features"
+      ],
+      "feature_transformations": {
+        "original_selected_features": 30,
+        "transformed_features": 34,
+        "transformations_applied": [
+          "Created 4 transformed features",
+          "Applied log transformation to 2 features",
+          "Applied sqrt transformation to 2 features"
+        ]
+      },
+      "feature_creation": {
+        "original_features": 79,
+        "engineered_features": 81,
+        "new_features_created": 2,
+        "engineered_feature_list": [
+          "Flag_Activity_Score",
+          "Active_Time_Ratio"
+        ]
+      },
+      "feature_scaling": {
+        "numeric_features_scaled": 81,
+        "categorical_features_preserved": 0,
+        "scaling_method": "MinMaxScaler (0-1)",
+        "final_feature_count": 81
+      }
+    }
+  },
+  "feature_engineering_statistics": {
+    "feature_engineering_timestamp": "2026-01-29T15:52:19.788274",
+    "dataset_summary": {
+      "total_files_processed": 8,
+      "total_original_features": 632,
+      "total_final_features": 648,
+      "total_new_features_created": 16,
+      "total_features_selected": 240,
+      "feature_reduction_ratio": -2.53
+    },
+    "engineering_summary": {
+      "average_features_per_file": 81.0,
+      "feature_optimization_achieved": "Moderate",
+      "scaling_applied": "MinMaxScaler (0-1) for autoencoder compatibility",
+      "feature_diversity": "Mix of flow, statistical, timing, and engineered features"
+    },
+    "recommendations": [
+      "Consider additional feature selection for better performance",
+      "Reasonable feature count - should perform well",
+      "Features are scaled and ready for Phase 4: Label Processing"
+    ]
+  }
+}

@@ -1,17 +1,17 @@
 {
-  "timestamp": "2026-01-29T23:56:38.880782",
+  "timestamp": "2026-01-30T11:57:13.967976",
   "checks": {
     "check_backend_api": {
       "status": "FAIL",
-      "message": "Connection failed: HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+      "message": "Connection failed: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000176E224F4D0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
     },
     "check_ai_model_service": {
       "status": "FAIL",
-      "message": "Connection failed: HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=10)"
+      "message": "Connection failed: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /model/info (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000176E225EFD0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
     },
     "check_xai_integration": {
       "status": "FAIL",
-      "message": "Connection failed: HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=15)"
+      "message": "Connection failed: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /explain_anomaly (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000176E225F890>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
     },
     "check_database_connectivity": {
       "status": "FAIL",
@@ -43,37 +43,37 @@
       "endpoints": {
         "/health": {
           "status": "FAIL",
-          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000176E235C510>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
         },
         "/model/info": {
           "status": "FAIL",
-          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /model/info (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000176E235CD60>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
         },
         "/stats": {
           "status": "FAIL",
-          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /stats (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000176E2302330>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
         },
         "/anomalies": {
           "status": "FAIL",
-          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /anomalies (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000176E2359040>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
         },
         "/logs": {
           "status": "FAIL",
-          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /logs (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000176E2263F00>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
         },
         "/model/detect-enhanced": {
           "status": "FAIL",
-          "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=10)"
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /model/detect-enhanced (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000176E2342750>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
         }
       }
     },
     "check_real_time_features": {
       "status": "FAIL",
-      "message": "Real-time features error: HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=5)"
+      "message": "Real-time features error: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /realtime/stream (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000176E2341C50>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
     },
     "check_end_to_end_flow": {
       "status": "FAIL",
-      "message": "End-to-end flow failed: HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=10)"
+      "message": "End-to-end flow failed: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /model/info (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x00000176E22EAF30>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it'))"
     }
   }
 }

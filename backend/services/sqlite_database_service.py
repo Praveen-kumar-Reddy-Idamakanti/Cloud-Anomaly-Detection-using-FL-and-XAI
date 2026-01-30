@@ -9,6 +9,10 @@ import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import json
+from pathlib import Path
+
+# Import path configuration
+from config.app_config import path_config
 
 # Import SQLite setup
 from database.sqlite_setup import SQLiteSetup
@@ -19,7 +23,11 @@ class SQLiteDatabaseService:
     """Service class for SQLite database operations."""
     
     def __init__(self, db_path: str = None):
-        self.db_path = db_path or os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'anomaly_detection.db')
+        # Use backend/database directory for database
+        if db_path is None:
+            from config.app_config import path_config
+            db_path = str(path_config.project_root / "backend" / "database" / "anomaly_detection.db")
+        self.db_path = db_path
         self.conn = None
         self._ensure_database_directory()
         self._initialize_database()

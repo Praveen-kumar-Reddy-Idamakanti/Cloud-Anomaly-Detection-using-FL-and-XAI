@@ -9,10 +9,13 @@ from fastapi import HTTPException
 from typing import Dict, Any, List, Optional
 import numpy as np
 import logging
+import torch
 
-# Add XAI module path
-project_root = Path(__file__).parent.parent.parent
-xai_path = project_root / "model_development" / "xai"
+# Import path configuration
+from config.app_config import path_config
+
+# Add XAI module path using environment configuration
+xai_path = path_config.model_development_path / "xai"
 sys.path.append(str(xai_path))
 
 from models.schemas import AnomalyExplanationRequest, AnomalyExplanationResponse
@@ -143,24 +146,41 @@ class XAIService:
     
     def get_comprehensive_explanation(self, features: List[float]) -> Dict[str, Any]:
         """Get comprehensive explanation combining all three phases."""
-        if not XAI_AVAILABLE:
+        logger.info(f"=== XAI SERVICE: get_comprehensive_explanation ===")
+        logger.info(f"Features length: {len(features)}")
+        logger.info(f"XAI_AVAILABLE: {XAI_AVAILABLE}")
+        logger.info(f"Model service model available: {model_service.model is not None}")
+        
+        if not XAI_AVAILABLE or not model_service.model:
+            logger.warning("XAI or model not available, using mock comprehensive explanation")
             return self._get_mock_comprehensive_explanation(features)
         
         try:
+            logger.info("Using real model for comprehensive explanation...")
             # Get anomaly score from model
             features_tensor = np.array(features).reshape(1, -1)
+            logger.info(f"Features tensor shape: {features_tensor.shape}")
+            
             model_service.model.eval()
             with torch.no_grad():
                 reconstructed, encoded = model_service.model(torch.from_numpy(features_tensor).float().to(model_service.device))
                 reconstruction_error = torch.mean((reconstructed - features_tensor) ** 2, dim=1).item()
             
+            logger.info(f"Reconstruction error calculated: {reconstruction_error}")
+            
             # Get all phase explanations
+            logger.info("Getting phase1 explanation...")
             phase1_result = self.get_phase1_explanation(features, reconstruction_error)
+            
+            logger.info("Getting phase2 explanation...")
             phase2_result = self.get_phase2_explanation(features, reconstruction_error)
             
             # Get attack type if anomaly detected
-            anomaly_detected = reconstruction_error > 0.22610116
+            anomaly_detected = reconstruction_error > path_config.get_anomaly_threshold()
+            logger.info(f"Anomaly detected: {anomaly_detected} (threshold: {path_config.get_anomaly_threshold()})")
+            
             if anomaly_detected and model_service.attack_classifier:
+                logger.info("Getting phase3 explanation (attack type)...")
                 model_service.attack_classifier.eval()
                 with torch.no_grad():
                     attack_output = model_service.attack_classifier(torch.from_numpy(features_tensor).float().to(model_service.device))
@@ -168,11 +188,13 @@ class XAIService:
                     attack_type = torch.argmax(attack_probs, dim=1).item()
                     confidence = torch.max(attack_probs).item()
                 
+                logger.info(f"Attack type: {attack_type}, confidence: {confidence}")
                 phase3_result = self.get_phase3_explanation(features, attack_type, confidence)
             else:
+                logger.info("No anomaly detected or no attack classifier, using not_anomaly phase3")
                 phase3_result = {"phase": "phase3_classification", "explanation_type": "not_anomaly"}
             
-            return {
+            result = {
                 "comprehensive_explanation": True,
                 "features": features,
                 "anomaly_detected": anomaly_detected,
@@ -182,8 +204,17 @@ class XAIService:
                 "phase3": phase3_result,
                 "timestamp": str(np.datetime64('now'))
             }
+            
+            logger.info(f"Comprehensive explanation completed successfully")
+            logger.info(f"=== XAI SERVICE: SUCCESS ===")
+            return result
+            
         except Exception as e:
             logger.error(f"Comprehensive explanation failed: {e}")
+            logger.error(f"Exception type: {type(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            logger.info("Falling back to mock comprehensive explanation")
             return self._get_mock_comprehensive_explanation(features)
     
     def _calculate_feature_importance(self, shap_values: np.ndarray) -> List[Dict[str, Any]]:
@@ -213,9 +244,9 @@ class XAIService:
             "features": features,
             "anomaly_score": anomaly_score,
             "explanation": {
-                "is_anomaly": anomaly_score > 0.22610116,
+                "is_anomaly": anomaly_score > path_config.get_anomaly_threshold(),
                 "confidence": 0.85,
-                "reasoning": f"Reconstruction error {anomaly_score:.4f} exceeds threshold 0.2261",
+                "reasoning": f"Reconstruction error {anomaly_score:.4f} exceeds threshold {path_config.get_anomaly_threshold()}",
                 "key_features": [i for i, f in enumerate(features[:10]) if abs(f) > 0.5]
             },
             "timestamp": str(np.datetime64('now'))
@@ -236,7 +267,7 @@ class XAIService:
     
     def _get_mock_phase3_explanation(self, features: List[float], attack_type: int, confidence: float) -> Dict[str, Any]:
         """Mock Phase 3 explanation."""
-        attack_types = ["BENIGN", "DoS GoldenEye", "DoS Hulk", "DoS Slowhttptest", "DoS slowloris"]
+        attack_types = path_config.get_attack_types()
         return {
             "phase": "phase3_classification",
             "explanation_type": "attack_type_explainability",
@@ -256,7 +287,7 @@ class XAIService:
     def _get_mock_comprehensive_explanation(self, features: List[float]) -> Dict[str, Any]:
         """Mock comprehensive explanation."""
         anomaly_score = np.random.random() * 0.5
-        anomaly_detected = anomaly_score > 0.22610116
+        anomaly_detected = anomaly_score > path_config.get_anomaly_threshold()
         
         result = {
             "comprehensive_explanation": True,
@@ -298,10 +329,10 @@ async def get_explanation(anomaly_id: str) -> Dict[str, Any]:
                 features = json.loads(anomaly_data['features'])
             except json.JSONDecodeError:
                 logger.error(f"Failed to parse features for anomaly {anomaly_id}")
-                features = [0.0] * 78
+                features = [0.0] * path_config.get_model_input_dim()
         else:
             logger.warning(f"No features found for anomaly {anomaly_id}, using zeros")
-            features = [0.0] * 78
+            features = [0.0] * path_config.get_model_input_dim()
         
         # Generate explanation using real features
         explanation = xai_service.get_comprehensive_explanation(features)
@@ -321,24 +352,50 @@ async def get_explanation(anomaly_id: str) -> Dict[str, Any]:
 
 async def explain_anomaly(request: AnomalyExplanationRequest) -> Dict[str, Any]:
     """Generate comprehensive XAI explanation for anomalous data point."""
+    logger.info(f"=== EXPLAIN ANOMALY REQUEST ===")
+    logger.info(f"Request features length: {len(request.features) if request.features else 'None'}")
+    logger.info(f"Request threshold: {request.threshold}")
+    logger.info(f"Request explanation_type: {getattr(request, 'explanation_type', 'not_set')}")
+    
     try:
-        if len(request.features) != 78:
-            raise HTTPException(status_code=400, detail="Expected 78 features")
+        if len(request.features) != path_config.get_model_input_dim():
+            logger.error(f"Invalid features length: {len(request.features)}, expected {path_config.get_model_input_dim()}")
+            raise HTTPException(status_code=400, detail=f"Expected {path_config.get_model_input_dim()} features")
         
+        logger.info("Calling xai_service.get_comprehensive_explanation...")
         explanation = xai_service.get_comprehensive_explanation(request.features)
-        explanation["request_id"] = request.request_id if hasattr(request, 'request_id') else "unknown"
+        
+        logger.info(f"Explanation generated successfully:")
+        logger.info(f"  - Comprehensive explanation: {explanation.get('comprehensive_explanation', False)}")
+        logger.info(f"  - Anomaly detected: {explanation.get('anomaly_detected', False)}")
+        logger.info(f"  - Reconstruction error: {explanation.get('reconstruction_error', 'N/A')}")
+        logger.info(f"  - Phase1 available: {'phase1' in explanation}")
+        logger.info(f"  - Phase2 available: {'phase2' in explanation}")
+        logger.info(f"  - Phase3 available: {'phase3' in explanation}")
+        
+        if 'phase2' in explanation and explanation['phase2']:
+            phase2 = explanation['phase2']
+            logger.info(f"  - Phase2 feature_importance length: {len(phase2.get('feature_importance', []))}")
+        
+        explanation["request_id"] = getattr(request, 'request_id', None) or "unknown"
+        logger.info("=== EXPLAIN ANOMALY SUCCESS ===")
         return explanation
+        
     except ValueError as e:
+        logger.error(f"ValueError in explain_anomaly: {e}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Failed to generate explanation: {e}")
+        logger.error(f"Exception in explain_anomaly: {e}")
+        logger.error(f"Exception type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Failed to generate XAI explanation: {e}")
 
 async def get_phase_explanation(phase: str, features: List[float], **kwargs) -> Dict[str, Any]:
     """Get phase-specific explanation."""
     try:
-        if len(features) != 78:
-            raise HTTPException(status_code=400, detail="Expected 78 features")
+        if len(features) != path_config.get_model_input_dim():
+            raise HTTPException(status_code=400, detail=f"Expected {path_config.get_model_input_dim()} features")
         
         if phase == "phase1":
             return xai_service.get_phase1_explanation(features, kwargs.get("anomaly_score", 0.3))
@@ -359,8 +416,8 @@ async def get_phase_explanation(phase: str, features: List[float], **kwargs) -> 
 async def get_feature_importance(features: List[float]) -> Dict[str, Any]:
     """Get feature importance analysis."""
     try:
-        if len(features) != 78:
-            raise HTTPException(status_code=400, detail="Expected 78 features")
+        if len(features) != path_config.get_model_input_dim():
+            raise HTTPException(status_code=400, detail=f"Expected {path_config.get_model_input_dim()} features")
         
         # Get Phase 2 explanation for SHAP values
         phase2_result = xai_service.get_phase2_explanation(features, 0.3)
@@ -379,8 +436,8 @@ async def get_feature_importance(features: List[float]) -> Dict[str, Any]:
 async def get_attack_type_explanation(features: List[float], attack_type: int) -> Dict[str, Any]:
     """Get attack type specific explanation."""
     try:
-        if len(features) != 78:
-            raise HTTPException(status_code=400, detail="Expected 78 features")
+        if len(features) != path_config.get_model_input_dim():
+            raise HTTPException(status_code=400, detail=f"Expected {path_config.get_model_input_dim()} features")
         
         return xai_service.get_phase3_explanation(features, attack_type, 0.8)
     except Exception as e:

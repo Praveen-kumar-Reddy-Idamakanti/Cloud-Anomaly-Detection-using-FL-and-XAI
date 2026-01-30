@@ -1,0 +1,25 @@
+{
+  "server_round": 1,
+  "timestamp": "2025-07-22T14:57:57.799279",
+  "aggregated_metrics": {},
+  "client_metrics": {
+    "7b86ec66bffe408a9bf4e9b236dabc8c": {
+      "num_samples": 327944,
+      "metrics": {
+        "train_loss": 0.00038399395100383363,
+        "val_loss": 0.0028755738780201255,
+        "best_val_loss": 0.002328775096893253,
+        "learning_rate": 0.0005
+      }
+    },
+    "bb758bfe4f4b4c60a3bb1af0f3011623": {
+      "num_samples": 388192,
+      "metrics": {
+        "train_loss": 0.0004011120081067799,
+        "val_loss": 0.0029833598936072955,
+        "best_val_loss": 0.002932684925657463,
+        "learning_rate": 0.001
+      }
+    }
+  }
+}

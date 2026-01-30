@@ -16,6 +16,9 @@ from datetime import datetime
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+# Import path configuration
+from config.app_config import path_config
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -168,7 +171,8 @@ class SystemConnectivityChecker:
         """Check database connectivity."""
         print("\n💾 Checking Database Connectivity...")
         
-        db_path = project_root / "data" / "anomaly_detection.db"
+        # Use backend/database directory
+        db_path = path_config.project_root / "backend" / "database" / "anomaly_detection.db"
         
         if not db_path.exists():
             self.results["checks"]["check_database_connectivity"] = {
@@ -219,7 +223,7 @@ class SystemConnectivityChecker:
         """Check model artifacts availability."""
         print("\n📁 Checking Model Artifacts...")
         
-        artifacts_path = project_root / "model_artifacts"
+        artifacts_path = path_config.model_artifacts_path
         
         if not artifacts_path.exists():
             self.results["checks"]["check_model_artifacts"] = {

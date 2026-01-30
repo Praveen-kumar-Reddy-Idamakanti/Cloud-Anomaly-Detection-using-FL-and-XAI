@@ -11,9 +11,8 @@ import os
 import sys
 from pathlib import Path
 
-# Add project root to Python path
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
+# Import path configuration
+from config.app_config import path_config
 
 from database.sqlite_setup import SQLiteSetup
 
@@ -22,7 +21,7 @@ class DatabasePopulatorFromCSV:
     
     def __init__(self):
         self.db = SQLiteSetup()
-        self.csv_file = project_root / "data" / "real_anomalies_consolidated.csv"
+        self.csv_file = path_config.project_root / "data" / "real_anomalies_consolidated.csv"
         
     def load_anomalies_from_csv(self):
         """Load anomalies from the consolidated CSV file."""

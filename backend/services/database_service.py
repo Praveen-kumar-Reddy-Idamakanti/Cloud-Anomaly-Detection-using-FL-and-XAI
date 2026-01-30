@@ -9,9 +9,8 @@ import sys
 from typing import List, Dict, Any, Optional
 import numpy as np
 
-# Add project root to Python path to import database setup
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-sys.path.append(project_root)
+# Import path configuration
+from config.app_config import path_config
 
 from database.sqlite_setup import SQLiteSetup
 
@@ -251,10 +250,28 @@ class DatabaseService:
                 cursor.execute('SELECT * FROM anomalies ORDER BY timestamp DESC LIMIT ? OFFSET ?', (limit, start_index))
                 anomalies = cursor.fetchall()
                 
-                # Convert Row objects to dictionaries
+                # Convert Row objects to dictionaries and map field names
                 result = []
                 for anomaly in anomalies:
-                    result.append(dict(anomaly))
+                    anomaly_dict = dict(anomaly)
+                    # Map database field names to frontend field names
+                    mapped_anomaly = {
+                        'id': anomaly_dict.get('id'),
+                        'timestamp': anomaly_dict.get('timestamp'),
+                        'severity': anomaly_dict.get('severity'),
+                        'source_ip': anomaly_dict.get('source_ip'),
+                        'destination_ip': anomaly_dict.get('destination_ip'),
+                        'protocol': anomaly_dict.get('protocol'),
+                        'action': anomaly_dict.get('action'),
+                        'confidence': anomaly_dict.get('confidence'),
+                        'reviewed': anomaly_dict.get('reviewed'),
+                        'details': anomaly_dict.get('details'),
+                        'features': anomaly_dict.get('features'),
+                        'anomalyScore': anomaly_dict.get('anomaly_score'),
+                        'attackTypeId': anomaly_dict.get('attack_type_id'),
+                        'attackConfidence': anomaly_dict.get('attack_confidence')
+                    }
+                    result.append(mapped_anomaly)
                 
                 return result
                 
@@ -305,7 +322,26 @@ class DatabaseService:
                 if anomaly is None:
                     raise ValueError("Anomaly not found")
                 
-                return dict(anomaly)
+                # Map database field names to frontend field names
+                anomaly_dict = dict(anomaly)
+                mapped_anomaly = {
+                    'id': anomaly_dict.get('id'),
+                    'timestamp': anomaly_dict.get('timestamp'),
+                    'severity': anomaly_dict.get('severity'),
+                    'source_ip': anomaly_dict.get('source_ip'),
+                    'destination_ip': anomaly_dict.get('destination_ip'),
+                    'protocol': anomaly_dict.get('protocol'),
+                    'action': anomaly_dict.get('action'),
+                    'confidence': anomaly_dict.get('confidence'),
+                    'reviewed': anomaly_dict.get('reviewed'),
+                    'details': anomaly_dict.get('details'),
+                    'features': anomaly_dict.get('features'),
+                    'anomalyScore': anomaly_dict.get('anomaly_score'),
+                    'attackTypeId': anomaly_dict.get('attack_type_id'),
+                    'attackConfidence': anomaly_dict.get('attack_confidence')
+                }
+                
+                return mapped_anomaly
                 
             except Exception as e:
                 logger.error(f"Failed to get anomaly {anomaly_id} from SQLite: {e}")

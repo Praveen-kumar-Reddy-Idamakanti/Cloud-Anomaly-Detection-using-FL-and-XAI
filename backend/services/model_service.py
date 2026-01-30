@@ -4,10 +4,15 @@ Enhanced to support two-stage prediction with attack type classification.
 """
 
 import logging
+import sys
+import os
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, List
 import numpy as np
 import torch
+
+# Import path configuration
+from config.app_config import path_config
 
 # Try to import the actual model, fall back to mock if not available
 try:
@@ -19,9 +24,7 @@ except ImportError:
 
 # Try to import the enhanced two-stage model
 try:
-    import sys
-    import os
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'model_development'))
+    sys.path.append(str(path_config.model_development_path))
     from train import FixedAutoencoderTrainer, AttackTypeClassifier
     TWO_STAGE_AVAILABLE = True
 except ImportError:
@@ -35,7 +38,7 @@ model: Optional[Any] = None
 attack_classifier: Optional[Any] = None
 model_info: Dict[str, Any] = {}
 device: Optional[torch.device] = None
-attack_types = ["BENIGN", "DoS GoldenEye", "DoS Hulk", "DoS Slowhttptest", "DoS slowloris"]
+attack_types = path_config.get_attack_types()
 
 
 class ModelService:
@@ -88,8 +91,8 @@ class ModelService:
         """Load the enhanced two-stage model."""
         global model, model_info, device, attack_classifier
         
-        # Look for the latest model in model_artifacts directory (project root)
-        model_dir = Path(__file__).parent.parent.parent / "model_artifacts"
+        # Look for the latest model in model_artifacts directory
+        model_dir = path_config.model_artifacts_path
         if not model_dir.exists():
             logger.warning("No model_artifacts directory found, falling back to logs")
             return self._load_standard_model()
@@ -114,14 +117,14 @@ class ModelService:
             from model_development.autoencoder_model import CloudAnomalyAutoencoder, AutoencoderConfig
             config = AutoencoderConfig()
             model = CloudAnomalyAutoencoder(
-                input_dim=78,
+                input_dim=path_config.get_model_input_dim(),
                 encoding_dims=config.encoding_dims,
                 bottleneck_dim=config.bottleneck_dim,
                 dropout_rate=config.dropout_rate
             ).to(device)
             
             # Load attack classifier
-            attack_classifier = AttackTypeClassifier(input_dim=78, num_classes=5).to(device)
+            attack_classifier = AttackTypeClassifier(input_dim=path_config.get_model_input_dim(), num_classes=5).to(device)
             
             # Load state dicts
             model.load_state_dict(checkpoint['model_state_dict'])
@@ -133,16 +136,16 @@ class ModelService:
             self.model = model
             self.attack_classifier = attack_classifier
             self.device = device
-            # Use actual model input_dim instead of potentially incorrect config
+            # Use actual model input dimension from config
             self.model_info = {
-                "input_dim": 78,  # Actual model input dimension
+                "input_dim": path_config.get_model_input_dim(),
                 "model_path": str(model_path),
                 "status": "loaded"
             }
             
             return {
                 "model_path": str(model_path),
-                "input_dim": 78,
+                "input_dim": path_config.get_model_input_dim(),
                 "last_trained": checkpoint.get('epoch', 'unknown'),
                 "accuracy": checkpoint.get('accuracy'),
                 "status": "loaded",
@@ -158,8 +161,8 @@ class ModelService:
         """Load the standard autoencoder model."""
         global model, model_info, device
         
-        # Look for the latest model in logs/server directory (project root)
-        logs_dir = Path(__file__).parent.parent.parent / "logs" / "server"
+        # Look for the latest model in logs/server directory
+        logs_dir = path_config.logs_path / "server"
         if not logs_dir.exists():
             raise FileNotFoundError("No logs directory found")
         
@@ -197,7 +200,7 @@ class ModelService:
             
             return {
                 "model_path": str(model_path),
-                "input_dim": model_info.get("input_dim", 78),
+                "input_dim": path_config.get_model_input_dim(),
                 "last_trained": latest_dir.name,
                 "accuracy": model_info.get("accuracy"),
                 "status": "loaded",
@@ -231,7 +234,7 @@ class ModelService:
         
         return {
             "model_path": self.model_info.get("model_path", "unknown"),
-            "input_dim": self.model_info.get("input_dim", 78),
+            "input_dim": path_config.get_model_input_dim(),
             "last_trained": self.model_info.get("last_trained", "unknown"),
             "accuracy": self.model_info.get("accuracy"),
             "status": "loaded",
@@ -261,7 +264,7 @@ class ModelService:
             raise ValueError("No model loaded")
         
         # Ensure correct input dimension
-        expected_dim = self.model_info.get("input_dim", 78)
+        expected_dim = path_config.get_model_input_dim()
         if features.shape[1] != expected_dim:
             raise ValueError(f"Expected {expected_dim} features, got {features.shape[1]}")
         
@@ -277,17 +280,20 @@ class ModelService:
                 'anomaly_scores': np.random.random(len(features)) * 0.5
             }
     
-    def detect_anomalies_two_stage(self, features: np.ndarray, threshold: float = 0.22610116) -> Dict[str, Any]:
+    def detect_anomalies_two_stage(self, features: np.ndarray, threshold: float = None) -> Dict[str, Any]:
         """
         Detect anomalies using two-stage prediction (autoencoder + attack classifier).
         
         Args:
             features: Input features as numpy array (78 features)
-            threshold: Anomaly detection threshold
+            threshold: Anomaly detection threshold (from config if not provided)
             
         Returns:
             Dictionary with two-stage detection results
         """
+        if threshold is None:
+            threshold = path_config.get_anomaly_threshold()
+        
         if not self.two_stage_enabled:
             # Fallback to standard detection
             logger.warning("Two-stage model not available, using standard detection")
@@ -306,7 +312,7 @@ class ModelService:
         
         try:
             # Ensure correct input dimension
-            expected_dim = self.model_info.get("input_dim", 78)
+            expected_dim = path_config.get_model_input_dim()
             if features.shape[1] != expected_dim:
                 raise ValueError(f"Expected {expected_dim} features, got {features.shape[1]}")
             
@@ -369,7 +375,7 @@ class ModelService:
     
     def get_input_dimension(self) -> int:
         """Get the input dimension of the loaded model."""
-        return self.model_info.get("input_dim", 9)
+        return path_config.get_model_input_dim()
     
     def get_device(self) -> torch.device:
         """Get the device the model is running on."""

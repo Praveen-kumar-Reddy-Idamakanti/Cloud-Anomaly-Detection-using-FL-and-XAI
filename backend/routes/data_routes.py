@@ -97,8 +97,12 @@ async def stream_realtime_data():
                     }
                     yield f"data: {json.dumps(heartbeat)}\n\n"
                 
-                # Wait before next event (random interval between 5-15 seconds)
-                await asyncio.sleep(random.randint(5, 15))
+                # Wait before next event (reduced interval for testing)
+                wait_time = random.randint(2, 5)  # Reduced from 5-15 to 2-5 seconds
+                try:
+                    await asyncio.wait_for(asyncio.sleep(wait_time), timeout=10.0)
+                except asyncio.TimeoutError:
+                    continue  # Skip to next iteration if timeout occurs
                 
             except Exception as e:
                 # Send error event and continue

@@ -56,8 +56,11 @@ class TrainingService:
         })
         
         # In a real implementation, this would start the actual federated learning process
-        # For now, we'll simulate the training process
-        asyncio.create_task(self._simulate_training(request))
+        # For now, we'll simulate the training process synchronously
+        import threading
+        training_thread = threading.Thread(target=lambda: asyncio.run(self._simulate_training(request)))
+        training_thread.daemon = True
+        training_thread.start()
         
         return {"message": "Training started", "request": request.dict()}
     

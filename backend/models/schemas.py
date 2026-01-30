@@ -81,13 +81,19 @@ class AnomalyData(BaseModel):
     id: str
     timestamp: str
     severity: str
-    source_ip: str
-    destination_ip: str
+    source_ip: Optional[str] = None  # Allow database field names
+    destination_ip: Optional[str] = None  # Allow database field names
+    sourceIp: Optional[str] = None  # Frontend field names
+    destinationIp: Optional[str] = None  # Frontend field names
     protocol: str
     action: str
     confidence: float
     reviewed: bool
     details: str
+    features: Optional[str] = None
+    anomalyScore: Optional[float] = None
+    attackTypeId: Optional[int] = None
+    attackConfidence: Optional[float] = None
 
 
 class LogData(BaseModel):

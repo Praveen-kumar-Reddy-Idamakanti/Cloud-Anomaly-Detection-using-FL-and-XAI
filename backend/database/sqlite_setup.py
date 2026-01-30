@@ -9,13 +9,19 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List
 import json
 import random
+from pathlib import Path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Database path
-DB_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'anomaly_detection.db')
+# Database path - use backend/database directory
+try:
+    from config.app_config import path_config
+    DB_PATH = str(path_config.project_root / "backend" / "database" / "anomaly_detection.db")
+except ImportError:
+    # Fallback to local directory if config not available
+    DB_PATH = os.path.join(os.path.dirname(__file__), 'anomaly_detection.db')
 
 class SQLiteSetup:
     """SQLite database setup and management."""
@@ -368,7 +374,15 @@ class SQLiteSetup:
         """Create a backup of the database."""
         if backup_path is None:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            backup_path = os.path.join(os.path.dirname(self.db_path), f'backup_{timestamp}.db')
+            # Use path configuration for backup directory
+            try:
+                from config.app_config import path_config
+                backup_dir = path_config.project_root / "backend" / "database" / "backups"
+                backup_dir.mkdir(parents=True, exist_ok=True)
+                backup_path = backup_dir / f'backup_{timestamp}.db'
+            except ImportError:
+                # Fallback to local directory if config not available
+                backup_path = os.path.join(os.path.dirname(self.db_path), f'backup_{timestamp}.db')
         
         try:
             import shutil

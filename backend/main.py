@@ -7,9 +7,8 @@ import sys
 import logging
 from pathlib import Path
 
-# Add project root to Python path
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
+# Import path configuration
+from config.app_config import path_config
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
 from typing import List
@@ -73,6 +72,14 @@ logger = logging.getLogger(__name__)
 
 # Create FastAPI application
 app = create_app()
+
+# Initialize model service on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on application startup."""
+    logger.info("Initializing model service...")
+    model_service.load_latest_model()
+    logger.info(f"Model service initialized. Model loaded: {model_service.is_model_loaded()}")
 
 # Model and Health Endpoints
 @app.get("/", response_model=dict)

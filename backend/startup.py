@@ -7,9 +7,8 @@ import sys
 import os
 from pathlib import Path
 
-# Add project root to Python path
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
+# Import path configuration
+from config.app_config import path_config
 
 from services.model_service import model_service
 

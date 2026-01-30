@@ -7,9 +7,8 @@ Run this script to initialize the database with sample data.
 import sys
 import os
 
-# Add the backend directory to the Python path
-backend_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, backend_dir)
+# Import path configuration
+from config.app_config import path_config
 
 from database.sqlite_setup import main
 
