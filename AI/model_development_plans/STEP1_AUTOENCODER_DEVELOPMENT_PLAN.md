@@ -14,11 +14,11 @@
 ### 1.1 Model Architecture Planning
 ```python
 # Autoencoder Architecture Specifications
-Input Layer: 81 features (from processed data)
+Input Layer: 78 features (from processed data - excluding original Label column)
 Encoder Layers: [64 → 32 → 16 → 8] neurons
 Bottleneck Layer: 4 neurons (compressed representation)
 Decoder Layers: [8 → 16 → 32 → 64] neurons
-Output Layer: 81 neurons (reconstruction)
+Output Layer: 78 neurons (reconstruction)
 Activation Functions: ReLU (hidden), Sigmoid (output)
 ```
 
@@ -44,7 +44,7 @@ Activation Functions: ReLU (hidden), Sigmoid (output)
 # ✅ Data Loading Complete
 1. ✅ Load processed datasets from data_preprocessing/processed_data/
 2. ✅ Found 8 processed datasets with 1,622,672 total samples
-3. ✅ Extract 79 features (excluding 4 label columns)
+3. ✅ Extract 78 features (excluding original Label column and 4 target columns)
 4. ✅ Separate normal traffic (Binary_Label = 0) for training
 5. ✅ Reserve anomaly samples (Binary_Label = 1) for testing
 6. ✅ Split data: 70% train, 15% validation, 15% test
@@ -54,7 +54,7 @@ Activation Functions: ReLU (hidden), Sigmoid (output)
 ### 2.2 Feature Selection for Cloud Anomaly Detection ✅
 ```python
 # ✅ Features Successfully Loaded
-Core Flow Features: ✅ 79 features extracted from processed data
+Core Flow Features: ✅ 78 features extracted from processed data
 - Flow Duration, Total Fwd Packets, Total Backward Packets
 - Total Length of Fwd Packets, Total Length of Bwd Packets
 - Flow Bytes/s, Flow Packets/s

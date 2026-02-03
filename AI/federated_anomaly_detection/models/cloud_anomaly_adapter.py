@@ -1,66 +1,96 @@
+"""
+Integration adapter for using CloudAnomalyAutoencoder in federated learning
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
 from typing import Tuple, Dict, Any
+import sys
+import os
 
-class AnomalyDetector(nn.Module):
-    def __init__(self, input_dim: int, encoding_dim: int = 32):
-        super(AnomalyDetector, self).__init__()
-        self.encoder = nn.Sequential(
-            nn.Linear(input_dim, 128),
-            nn.BatchNorm1d(128),
-            nn.LeakyReLU(0.1),
-            nn.Dropout(0.3),
-            nn.Linear(128, 64),
-            nn.BatchNorm1d(64),
-            nn.LeakyReLU(0.1),
-            nn.Linear(64, encoding_dim),
-            nn.LeakyReLU(0.1)
-        )
+# Add the model_development path to import CloudAnomalyAutoencoder
+model_dev_path = os.path.join(os.path.dirname(__file__), '..', '..', 'model_development')
+if model_dev_path not in sys.path:
+    sys.path.append(model_dev_path)
+
+try:
+    from auto_encoder_model import CloudAnomalyAutoencoder, AutoencoderConfig
+except ImportError as e:
+    print(f"Warning: Could not import CloudAnomalyAutoencoder: {e}")
+    CloudAnomalyAutoencoder = None
+    AutoencoderConfig = None
+
+
+if CloudAnomalyAutoencoder is None:
+    # Fallback class when CloudAnomalyAutoencoder is not available
+    class CloudAnomalyAutoencoder(nn.Module):
+        def __init__(self, input_dim=79, encoding_dims=[64, 32, 16, 8], bottleneck_dim=4, dropout_rate=0.1):
+            super(CloudAnomalyAutoencoder, self).__init__()
+            # Simple fallback architecture
+            self.encoder = nn.Sequential(
+                nn.Linear(input_dim, 64),
+                nn.ReLU(),
+                nn.Dropout(dropout_rate),
+                nn.Linear(64, bottleneck_dim),
+                nn.ReLU()
+            )
+            self.decoder = nn.Sequential(
+                nn.Linear(bottleneck_dim, 64),
+                nn.ReLU(),
+                nn.Dropout(dropout_rate),
+                nn.Linear(64, input_dim),
+                nn.Sigmoid()
+            )
         
-        self.decoder = nn.Sequential(
-            nn.Linear(encoding_dim, 64),
-            nn.BatchNorm1d(64),
-            nn.LeakyReLU(0.1),
-            nn.Dropout(0.3),
-            nn.Linear(64, 128),
-            nn.BatchNorm1d(128),
-            nn.LeakyReLU(0.1),
-            nn.Linear(128, input_dim),
-            nn.Sigmoid()
-        )
-        
-        # Initialize weights
-        self._init_weights()
+        def forward(self, x):
+            encoded = self.encoder(x)
+            reconstructed = self.decoder(encoded)
+            return reconstructed, encoded
+
+
+class FederatedCloudAnomalyAutoencoder(CloudAnomalyAutoencoder):
+    """
+    Adapter class to make CloudAnomalyAutoencoder compatible with federated learning
+    """
     
-    def _init_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='leaky_relu')
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
+    def __init__(self, input_dim: int, encoding_dim: int = 32, **kwargs):
+        """
+        Initialize with federated learning compatible parameters
+        
+        Args:
+            input_dim: Number of input features
+            encoding_dim: Encoding dimension (maps to bottleneck_dim)
+            **kwargs: Additional parameters for CloudAnomalyAutoencoder
+        """
+        # Map FL parameters to CloudAnomalyAutoencoder parameters
+        super().__init__(
+            input_dim=input_dim,
+            encoding_dims=[64, 32, 16, encoding_dim],  # Dynamic encoding dims
+            bottleneck_dim=encoding_dim,
+            dropout_rate=kwargs.get('dropout_rate', 0.3)  # Match FL dropout
+        )
+        
+        self.encoding_dim = encoding_dim
         
     def forward(self, x):
-        encoded = self.encoder(x)
-        decoded = self.decoder(encoded)
-        return decoded
+        """
+        Forward pass compatible with federated learning expectations
+        Returns only reconstructed output (FL compatibility)
+        """
+        reconstructed, encoded = super().forward(x)
+        return reconstructed
+    
+    def forward_with_encoding(self, x):
+        """
+        Forward pass that returns both reconstructed and encoded
+        For use when encoded representation is needed
+        """
+        return super().forward(x)
     
     def train_epoch(self, dataloader, optimizer, device, scheduler=None, val_dataloader=None, 
                     class_weights=None):
         """
-        Train the model for one epoch with optional class weights
-        
-        Args:
-            dataloader: Training data loader
-            optimizer: Optimizer for training
-            device: Device to run training on
-            scheduler: Learning rate scheduler (optional)
-            val_dataloader: Validation data loader (required if using ReduceLROnPlateau scheduler)
-            class_weights: Optional tensor of weights for each class [normal_weight, anomaly_weight]
-            
-        Returns:
-            Average training loss for the epoch
+        Training method compatible with federated learning client
         """
         self.train()
         total_loss = 0.0
@@ -68,7 +98,7 @@ class AnomalyDetector(nn.Module):
         for batch_idx, batch in enumerate(dataloader):
             # Handle different batch formats
             if isinstance(batch, (list, tuple)) and len(batch) == 2:
-                data, targets = batch[0], batch[1]  # Unpack if batch is (data, targets)
+                data, targets = batch[0], batch[1]
             else:
                 data = batch
                 targets = None
@@ -83,19 +113,14 @@ class AnomalyDetector(nn.Module):
             
             # Apply class weights if provided and targets are available
             if class_weights is not None and targets is not None:
-                # Move targets to device if they're not already there
                 targets = targets.to(device)
-                
-                # Initialize weights tensor
                 weights = torch.ones_like(reconstruction_errors)
                 
-                # Apply class weights
                 for class_idx, weight in enumerate(class_weights):
                     class_mask = (targets == class_idx)
                     if class_mask.any():
                         weights[class_mask] = weight
                 
-                # Apply weights to reconstruction errors
                 weighted_errors = reconstruction_errors * weights
                 loss = weighted_errors.mean()
             else:
@@ -110,7 +135,7 @@ class AnomalyDetector(nn.Module):
             
             optimizer.step()
             
-            total_loss += loss.item() * data.size(0)  # Multiply by batch size for correct averaging
+            total_loss += loss.item() * data.size(0)
         
         # Calculate average loss for the epoch
         avg_train_loss = total_loss / len(dataloader.dataset)
@@ -136,7 +161,7 @@ class AnomalyDetector(nn.Module):
         with torch.no_grad():
             for batch in dataloader:
                 if isinstance(batch, (list, tuple)):
-                    batch = batch[0]  # Handle case where batch is (data, target)
+                    batch = batch[0]
                     
                 batch = batch.to(device)
                 reconstructed = self(batch)
@@ -153,7 +178,7 @@ class AnomalyDetector(nn.Module):
         with torch.no_grad():
             for batch in dataloader:
                 if isinstance(batch, (list, tuple)):
-                    batch = batch[0]  # Handle case where batch is (data, target)
+                    batch = batch[0]
                     
                 batch = batch.to(device)
                 reconstructed = self(batch)
@@ -169,38 +194,34 @@ class AnomalyDetector(nn.Module):
         anomalies = errors > threshold
         return anomalies, errors, threshold
 
-def create_model(input_dim: int, learning_rate: float = 1e-3, device: str = "cpu",
-                class_weights: torch.Tensor = None, use_cloud_anomaly: bool = False) -> Tuple[nn.Module, torch.optim.Optimizer, torch.optim.lr_scheduler._LRScheduler, torch.Tensor]:
+
+def create_federated_model(input_dim: int, learning_rate: float = 1e-3, device: str = "cpu",
+                         class_weights: torch.Tensor = None, use_cloud_anomaly: bool = True) -> Tuple[nn.Module, torch.optim.Optimizer, torch.optim.lr_scheduler._LRScheduler, torch.Tensor]:
     """
-    Create and return the autoencoder model, optimizer, and learning rate scheduler
+    Create and return the autoencoder model for federated learning
     
     Args:
         input_dim: Number of input features
         learning_rate: Initial learning rate for the optimizer
         device: Device to run the model on ('cpu' or 'cuda')
         class_weights: Optional tensor of weights for each class [normal_weight, anomaly_weight]
-        use_cloud_anomaly: Whether to use CloudAnomalyAutoencoder from model_development (True) or original AnomalyDetector (False)
+        use_cloud_anomaly: Whether to use CloudAnomalyAutoencoder (True) or original AnomalyDetector (False)
         
     Returns:
         Tuple of (model, optimizer, scheduler, class_weights)
     """
     if use_cloud_anomaly:
-        # Import and use the enhanced CloudAnomalyAutoencoder
-        try:
-            from cloud_anomaly_adapter import FederatedCloudAnomalyAutoencoder
-            model = FederatedCloudAnomalyAutoencoder(input_dim=input_dim, encoding_dim=32)
-            print(f"Using enhanced CloudAnomalyAutoencoder with {sum(p.numel() for p in model.parameters() if p.requires_grad):,} parameters")
-        except ImportError as e:
-            print(f"Warning: Could not import CloudAnomalyAutoencoder ({e}). Falling back to AnomalyDetector.")
-            model = AnomalyDetector(input_dim)
+        # Use the enhanced CloudAnomalyAutoencoder
+        model = FederatedCloudAnomalyAutoencoder(input_dim=input_dim, encoding_dim=32)
     else:
-        model = AnomalyDetector(input_dim)
+        # Fallback to original model
+        from federated_anomaly_detection.models.autoencoder import AnomalyDetector
+        model = AnomalyDetector(input_dim=input_dim, encoding_dim=32)
     
     model = model.to(device)
     
     # Calculate class weights if not provided
     if class_weights is None:
-        # Default weights (will be 1.0 for both classes if not specified)
         class_weights = torch.ones(2, device=device)
     elif not isinstance(class_weights, torch.Tensor):
         class_weights = torch.tensor(class_weights, device=device)
@@ -223,3 +244,30 @@ def create_model(input_dim: int, learning_rate: float = 1e-3, device: str = "cpu
     )
     
     return model, optimizer, scheduler, class_weights
+
+
+if __name__ == "__main__":
+    # Test the integration
+    print("Testing FederatedCloudAnomalyAutoencoder...")
+    
+    # Create model
+    model, optimizer, scheduler, class_weights = create_federated_model(
+        input_dim=79, 
+        use_cloud_anomaly=True
+    )
+    
+    print(f"✅ Model created successfully")
+    print(f"   Parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad):,}")
+    print(f"   Device: {next(model.parameters()).device}")
+    
+    # Test forward pass
+    batch_size = 32
+    sample_input = torch.randn(batch_size, 79)
+    
+    with torch.no_grad():
+        output = model(sample_input)
+        print(f"✅ Forward pass successful")
+        print(f"   Input shape: {sample_input.shape}")
+        print(f"   Output shape: {output.shape}")
+    
+    print("🎉 Integration test completed successfully!")

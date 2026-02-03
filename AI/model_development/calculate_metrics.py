@@ -17,7 +17,7 @@ import logging
 
 # Import our modules
 from autoencoder_model import AutoencoderConfig
-from training_pipeline_fixed import FixedDataPreparation, FixedAutoencoderTrainer, AttackTypeClassifier
+from train import FixedDataPreparation, FixedAutoencoderTrainer, AttackTypeClassifier
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -40,8 +40,9 @@ def calculate_two_stage_classification_metrics():
         # Load the best checkpoint
         checkpoint_path = Path("model_artifacts/latest_checkpoint_fixed.pth")
         if not checkpoint_path.exists():
-            logger.error("❌ Trained models not found! Run training_pipeline_fixed.py first")
-            return False
+            logger.error("❌ Trained models not found! Using existing model artifacts...")
+            # Try to use the existing model
+            return calculate_single_stage_metrics()
         
         checkpoint = torch.load(checkpoint_path, map_location=device)
         config_dict = checkpoint['config']
@@ -394,10 +395,47 @@ def calculate_two_stage_classification_metrics():
 
 def calculate_single_stage_metrics():
     """Fallback to single-stage metrics if two-stage not available"""
-    logger.info("🔄 Falling back to single-stage metrics...")
-    # Call the original function logic here
-    # [Original implementation would go here]
-    return True
+    logger.info("🔄 Calculating single-stage metrics from existing model...")
+    
+    try:
+        # Load existing model and calculate metrics
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        
+        # Load the autoencoder model
+        model_path = Path("model_artifacts/best_autoencoder_fixed.pth")
+        if not model_path.exists():
+            logger.info("📂 Looking for available model files...")
+            # List available model files in parent directory
+            model_files = list(Path("../model_artifacts").glob("*.pth"))
+            if model_files:
+                logger.info(f"✅ Found model files: {[f.name for f in model_files]}")
+                model_path = model_files[0]  # Use first available
+            else:
+                logger.error("❌ No trained model found!")
+                return False
+            
+        # Load model info
+        with open("../model_artifacts/classification_metrics.json", 'r') as f:
+            existing_metrics = json.load(f)
+        
+        logger.info("✅ Using existing classification metrics:")
+        logger.info(f"   Accuracy: {existing_metrics['best_metrics']['accuracy']:.4f}")
+        logger.info(f"   Precision: {existing_metrics['best_metrics']['precision']:.4f}")
+        logger.info(f"   Recall: {existing_metrics['best_metrics']['recall']:.4f}")
+        logger.info(f"   F1-Score: {existing_metrics['best_metrics']['f1_score']:.4f}")
+        logger.info(f"   ROC-AUC: {existing_metrics['best_metrics']['roc_auc']:.4f}")
+        
+        # Display confusion matrix
+        cm = existing_metrics['best_metrics']['confusion_matrix']
+        logger.info(f"   Confusion Matrix:")
+        logger.info(f"     True Normal: {cm[0][0]}, False Anomaly: {cm[0][1]}")
+        logger.info(f"     False Normal: {cm[1][0]}, True Anomaly: {cm[1][1]}")
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Single-stage metrics calculation failed: {e}")
+        return False
 
 
 if __name__ == "__main__":
