@@ -1,0 +1,106 @@
+{
+  "evaluation": {
+    "dataset": "federated_client_validation (data/maximized/*.npz)",
+    "num_samples": 324537,
+    "anomaly_rate": 27.608562351904403
+  },
+  "model_info": {
+    "checkpoint": "C:\\Users\\prave\\Desktop\\Research Paper\\FL, XAI\\work\\CICD  project\\AI\\federated_anomaly_detection\\checkpoints\\round_5_optimized_model.npz",
+    "input_dim": 79
+  },
+  "roc_auc": 0.663810912677616,
+  "best_threshold_method": "median_plus_mad",
+  "best_metrics": {
+    "threshold": 0.002123435348039493,
+    "accuracy": 0.8088661693427868,
+    "precision": 0.7769963428847004,
+    "recall": 0.4315625,
+    "f1_score": 0.5549129629895383,
+    "confusion_matrix": [
+      [
+        223839,
+        11098
+      ],
+      [
+        50932,
+        38668
+      ]
+    ]
+  },
+  "all_thresholds": {
+    "95th_percentile": {
+      "threshold": 0.004846837837249041,
+      "accuracy": 0.7602707857655676,
+      "precision": 0.8635607321131448,
+      "recall": 0.15639508928571427,
+      "f1_score": 0.2648284464267153,
+      "confusion_matrix": [
+        [
+          232723,
+          2214
+        ],
+        [
+          75587,
+          14013
+        ]
+      ]
+    },
+    "mean_plus_2std": {
+      "threshold": 0.004323683795519173,
+      "accuracy": 0.7733663650061472,
+      "precision": 0.8611223617298951,
+      "recall": 0.21356026785714285,
+      "f1_score": 0.3422434068734853,
+      "confusion_matrix": [
+        [
+          231851,
+          3086
+        ],
+        [
+          70465,
+          19135
+        ]
+      ]
+    },
+    "mean_plus_3std": {
+      "threshold": 0.005853436887264252,
+      "accuracy": 0.7332045344598613,
+      "precision": 0.7983376212151198,
+      "recall": 0.045022321428571425,
+      "f1_score": 0.08523765754915322,
+      "confusion_matrix": [
+        [
+          233918,
+          1019
+        ],
+        [
+          85566,
+          4034
+        ]
+      ]
+    },
+    "median_plus_mad": {
+      "threshold": 0.002123435348039493,
+      "accuracy": 0.8088661693427868,
+      "precision": 0.7769963428847004,
+      "recall": 0.4315625,
+      "f1_score": 0.5549129629895383,
+      "confusion_matrix": [
+        [
+          223839,
+          11098
+        ],
+        [
+          50932,
+          38668
+        ]
+      ]
+    }
+  },
+  "reconstruction_error_stats": {
+    "mean": 0.001264177612029016,
+    "std": 0.0015297530917450786,
+    "min": 6.123618277342757e-06,
+    "max": 0.05321574583649635
+  }
+}

@@ -377,7 +377,7 @@ export const explanationsApi = {
         const mappedImportances = featureImportances.map((item: any) => {
           console.log('Mapping feature importance:', item);
           return {
-            feature: item.feature_name || `feature_${item.feature_index}`,
+            feature: item.feature_name || item.feature || `feature_${item.feature_index}`,
             importance: item.importance,
             shap_value: item.shap_value,
             direction: item.direction

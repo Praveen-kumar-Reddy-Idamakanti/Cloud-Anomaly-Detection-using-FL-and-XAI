@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, AlertTriangle, ArrowRight, Clock, CheckCircle2, Construction } from 'lucide-react';
+import { BookOpen, AlertTriangle, ArrowRight, Clock, CheckCircle2 } from 'lucide-react';
 import Navbar from '../components/Layout/Navbar';
 import Sidebar from '../components/Layout/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { anomaliesApi } from '../api/api';
-import { AnomalyData } from '../data/mockData';
+import { anomaliesApi, AnomalyData } from '../api/api';
 
 const XAI: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -64,14 +63,6 @@ const XAI: React.FC = () => {
             <h1 className="text-2xl font-bold">XAI Explanations</h1>
           </div>
 
-          {/* Mock Data Warning */}
-          <Alert className="mb-6 border-amber-200 bg-amber-50">
-            <Construction className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-800">
-              <strong>Mock Data - Work in Progress:</strong> The XAI explanations shown below are mock data used for testing purposes. 
-              Real federated learning explanations will be available once the system is fully integrated with trained models.
-            </AlertDescription>
-          </Alert>
 
           <div className="grid gap-6">
             {/* Overview Cards */}

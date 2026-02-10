@@ -222,11 +222,16 @@ class XAIService:
         if len(shap_values.shape) == 2:
             shap_values = shap_values[0]
         
+        # Import feature names from the XAI service
+        from services.xai_service import NETWORK_FEATURE_NAMES
+        
         importance = []
         for i, value in enumerate(shap_values):
+            # Use real feature names if available, fallback to feature index
+            feature_name = NETWORK_FEATURE_NAMES[i] if i < len(NETWORK_FEATURE_NAMES) else f"feature_{i}"
             importance.append({
                 "feature_index": i,
-                "feature_name": f"feature_{i}",
+                "feature_name": feature_name,
                 "shap_value": float(value),
                 "importance": abs(float(value)),
                 "direction": "positive" if value > 0 else "negative"

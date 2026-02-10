@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Run maximized federated learning training with optimized settings for large datasets
+Run maximized federated learning training with 8 clients and 1.6M+ samples
 """
 import subprocess
 import time
@@ -8,31 +8,30 @@ import sys
 import os
 from pathlib import Path
 
-def run_optimized_maximized_training():
-    """Run the maximized federated learning training with optimizations"""
-    print("🚀 OPTIMIZED MAXIMIZED FEDERATED LEARNING TRAINING")
-    print("=" * 70)
+def run_maximized_training():
+    """Run the maximized federated learning training"""
+    print("🚀 MAXIMIZED FEDERATED LEARNING TRAINING")
+    print("=" * 60)
     print("📊 Dataset: 1,622,672 samples across 8 clients")
-    print("⚡ Optimizations: Increased timeout, faster training")
     print("🎯 Goal: Train precision-optimized anomaly detection")
-    print("=" * 70)
+    print("=" * 60)
     
-    # Change to the correct directory
-    fl_dir = Path("AI/federated_anomaly_detection")
+    # Script is already in the correct directory
+    fl_dir = Path(".")  # Current directory (AI/federated_anomaly_detection)
     if not fl_dir.exists():
         print(f"❌ Directory not found: {fl_dir}")
         return 1
     
-    os.chdir(fl_dir)
+    # No need to change directory since we're already here
     
     try:
-        # Start the optimized server with increased timeout
-        print("\n🖥️  Starting OPTIMIZED server...")
+        # Start the maximized server
+        print("\n🖥️  Starting MAXIMIZED server...")
         server_cmd = [
             "python", "optimized_server.py",
             "--input_dim", "79",
-            "--min_clients", "8",  # 8 clients
-            "--num_rounds", "5",   # 5 rounds
+            "--min_clients", "8",  # 8 clients now
+            "--num_rounds", "5",   # Start with 5 rounds
             "--address", "localhost:8080"
         ]
         
@@ -43,10 +42,10 @@ def run_optimized_maximized_training():
         print("⏳ Waiting for server to start...")
         time.sleep(5)
         
-        # Start 8 clients with optimized settings
+        # Start 8 clients
         client_processes = []
         for client_id in range(1, 9):  # Clients 1-8
-            print(f"\n👤 Starting Optimized Client {client_id}...")
+            print(f"\n👤 Starting Client {client_id}...")
             client_cmd = [
                 "python", "optimized_client.py",
                 "--client-id", str(client_id),
@@ -58,20 +57,18 @@ def run_optimized_maximized_training():
             client_process = subprocess.Popen(client_cmd)
             client_processes.append(client_process)
             
-            # Stagger client starts to avoid overwhelming
-            time.sleep(1)
+            # Stagger client starts
+            time.sleep(2)
         
-        print(f"\n🎯 All 8 optimized clients started!")
+        print(f"\n🎯 All 8 clients started!")
         print("📊 Training with 1,622,672 total samples...")
-        print("⚡ Optimizations applied:")
-        print("   ⏱️  Increased timeout for large datasets")
-        print("   🚀 Faster training parameters")
-        print("   📈 Precision-optimized thresholds")
+        print("🚂 Training samples per round: 1,298,135")
+        print("⏱️  Expected training time: ~10-15 minutes")
         
         # Wait for server to complete
         server_process.wait()
         
-        print("\n🎉 OPTIMIZED MAXIMIZED TRAINING COMPLETED!")
+        print("\n🎉 MAXIMIZED TRAINING COMPLETED!")
         print("📊 Check 'checkpoints/' for saved models")
         print("📈 Training history available for analysis")
         
@@ -85,5 +82,5 @@ def run_optimized_maximized_training():
         return 1
 
 if __name__ == "__main__":
-    exit_code = run_optimized_maximized_training()
+    exit_code = run_maximized_training()
     sys.exit(exit_code)

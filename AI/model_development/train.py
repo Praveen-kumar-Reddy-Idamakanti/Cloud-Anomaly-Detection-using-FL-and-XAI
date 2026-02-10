@@ -13,6 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 from pathlib import Path
 import json
@@ -21,6 +22,9 @@ import copy
 from datetime import datetime
 import logging
 import warnings
+import argparse
+
+ARTIFACTS_DIR = Path(__file__).resolve().parents[1] / "model_artifacts"
 
 # Import our modules
 from autoencoder_model import CloudAnomalyAutoencoder, AutoencoderConfig
@@ -89,11 +93,12 @@ class AttackTypeClassifier(nn.Module):
 class FixedAutoencoderTrainer:
     """ENHANCED Two-Stage Training Pipeline - Anomaly Detection + Attack Type Classification"""
     
-    def __init__(self, config=None):
+    def __init__(self, config=None, attack_category_classes=None, attack_category_encoder=None):
         """
         Initialize trainer with two-stage capability
         """
         self.config = config if config else AutoencoderConfig()
+        self.config.input_dim = 78
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         # Stage 1: Autoencoder for anomaly detection (existing)
@@ -105,23 +110,27 @@ class FixedAutoencoderTrainer:
         ).to(self.device)
         
         # Stage 2: Attack type classifier (NEW)
-        self.attack_classifier = AttackTypeClassifier(
-            input_dim=78,
-            num_classes=5  # BENIGN + 4 DoS types
-        ).to(self.device)
+        self.attack_category_encoder = attack_category_encoder
+        self.attack_category_classes = list(attack_category_classes) if attack_category_classes is not None else None
+        self.attack_classifier = None
+        if self.attack_category_classes is not None:
+            self.attack_classifier = AttackTypeClassifier(
+                input_dim=78,
+                num_classes=len(self.attack_category_classes)
+            ).to(self.device)
         
         # Optimizers
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.config.learning_rate)
-        self.attack_optimizer = optim.Adam(self.attack_classifier.parameters(), lr=0.001)
+        self.attack_optimizer = None
+        if self.attack_classifier is not None:
+            self.attack_optimizer = optim.Adam(self.attack_classifier.parameters(), lr=0.001)
         
         # Loss functions
         self.criterion = nn.MSELoss()
         self.attack_criterion = nn.CrossEntropyLoss()
         
         # Attack type mappings
-        self.attack_types = ['BENIGN', 'DoS GoldenEye', 'DoS Hulk', 'DoS Slowhttptest', 'DoS slowloris']
-        self.label_encoder = LabelEncoder()
-        self.label_encoder.fit(self.attack_types)
+        self.attack_types = self.attack_category_classes
         
         # Add gradient clipping to prevent exploding gradients
         self.max_grad_norm = 1.0
@@ -151,14 +160,16 @@ class FixedAutoencoderTrainer:
         logger.info(f"Enhanced Two-Stage Trainer initialized:")
         logger.info(f"  Device: {self.device}")
         logger.info(f"  Autoencoder parameters: {self.model.count_parameters():,}")
-        logger.info(f"  Attack Classifier parameters: {self.attack_classifier.count_parameters():,}")
+        if self.attack_classifier is not None:
+            logger.info(f"  Attack Classifier parameters: {self.attack_classifier.count_parameters():,}")
         logger.info(f"  Input dimension: 78 (FIXED)")
         logger.info(f"  Learning rate: {self.config.learning_rate}")
         logger.info(f"  🎬 TWO-STAGE CONFIGURATION:")
         logger.info(f"    Max train batches: {self.max_train_batches}")
         logger.info(f"    Max val batches: {self.max_val_batches}")
         logger.info(f"    Max test batches: {self.max_test_batches}")
-        logger.info(f"    Attack types: {len(self.attack_types)} classes")
+        if self.attack_types is not None:
+            logger.info(f"    Attack types: {len(self.attack_types)} classes")
         logger.info(f"    Early stopping patience: 50 (full 50 epochs)")
         logger.info(f"    Expected time: 15-20 minutes")
         logger.info(f"    Expected F1: 70-75% (with attack classification)")
@@ -277,7 +288,8 @@ class FixedAutoencoderTrainer:
     
     def validate_attack_classifier_epoch(self, attack_loader):
         """Validate attack type classifier for one epoch"""
-        self.attack_classifier.eval()
+        if self.attack_classifier is not None:
+            self.attack_classifier.eval()
         total_loss = 0
         correct_predictions = 0
         total_samples = 0
@@ -304,48 +316,80 @@ class FixedAutoencoderTrainer:
         accuracy = correct_predictions / max(total_samples, 1)
         return avg_loss, accuracy
     
-    def prepare_attack_type_data(self, train_loader, test_loader):
+    def prepare_attack_type_data(self, data_prep):
         """Prepare attack type classification data from anomalies only"""
         logger.info("🎯 Preparing attack type classification data...")
-        
-        # Extract anomalies from training data
-        anomaly_features = []
-        anomaly_labels = []
-        
-        for features, binary_labels in train_loader:
-            anomaly_mask = binary_labels == 1  # Only anomalies
-            if anomaly_mask.any():
-                anomaly_features.append(features[anomaly_mask])
-                # Simulate attack types (in real implementation, use Attack_Type_Numeric)
-                simulated_labels = torch.randint(0, 5, (anomaly_mask.sum().item(),))
-                anomaly_labels.append(simulated_labels)
-        
-        if anomaly_features:
-            anomaly_features = torch.cat(anomaly_features, dim=0)
-            anomaly_labels = torch.cat(anomaly_labels, dim=0)
-            
-            # Create attack classifier dataset
-            from torch.utils.data import TensorDataset, DataLoader
-            attack_dataset = TensorDataset(anomaly_features, anomaly_labels)
-            
-            # Split into train/val for attack classifier
-            train_size = int(0.8 * len(attack_dataset))
-            val_size = len(attack_dataset) - train_size
-            train_dataset, val_dataset = torch.utils.data.random_split(attack_dataset, [train_size, val_size])
-            
-            attack_train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True)
-            attack_val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False)
-            
-            logger.info(f"✅ Attack classifier data prepared:")
-            logger.info(f"  Training samples: {len(train_dataset)}")
-            logger.info(f"  Validation samples: {len(val_dataset)}")
-            
-            return attack_train_loader, attack_val_loader
-        else:
+
+        if data_prep is None:
+            logger.warning("⚠️ Data preparation object not provided")
+            return None, None
+
+        # Prefer pre-split anomaly-only loaders (prevents data leakage)
+        if hasattr(data_prep, 'attack_train_loader') and hasattr(data_prep, 'attack_val_loader'):
+            if data_prep.attack_train_loader is not None and data_prep.attack_val_loader is not None:
+                logger.info("✅ Using anomaly-only attack-category loaders from DataPreparation")
+                return data_prep.attack_train_loader, data_prep.attack_val_loader
+
+        if self.attack_category_encoder is None:
+            logger.warning("⚠️ Attack category encoder not provided")
+            return None, None
+
+        if not hasattr(data_prep, "all_data") or data_prep.all_data is None:
+            logger.warning("⚠️ Processed dataset not loaded")
+            return None, None
+
+        if not hasattr(data_prep, "scaler") or data_prep.scaler is None:
+            logger.warning("⚠️ Scaler not available")
+            return None, None
+
+        if not hasattr(data_prep, "feature_names") or not data_prep.feature_names:
+            logger.warning("⚠️ Feature list not available")
+            return None, None
+
+        df = data_prep.all_data
+        if "Binary_Label" not in df.columns or "Attack_Category" not in df.columns:
+            logger.warning("⚠️ Required columns missing in processed dataset")
+            return None, None
+
+        anomaly_df = df[df["Binary_Label"] == 1]
+        if anomaly_df.empty:
             logger.warning("⚠️ No anomalies found for attack type training")
             return None, None
+
+        anomaly_features_raw = anomaly_df[data_prep.feature_names].values
+        anomaly_features = data_prep.scaler.transform(anomaly_features_raw)
+        anomaly_labels_str = anomaly_df["Attack_Category"].astype(str).values
+        anomaly_labels = self.attack_category_encoder.transform(anomaly_labels_str)
+
+        X_train, X_val, y_train, y_val = train_test_split(
+            anomaly_features,
+            anomaly_labels,
+            test_size=0.2,
+            random_state=42,
+            stratify=anomaly_labels,
+        )
+
+        from torch.utils.data import TensorDataset, DataLoader
+
+        train_ds = TensorDataset(
+            torch.tensor(X_train, dtype=torch.float32),
+            torch.tensor(y_train, dtype=torch.long),
+        )
+        val_ds = TensorDataset(
+            torch.tensor(X_val, dtype=torch.float32),
+            torch.tensor(y_val, dtype=torch.long),
+        )
+
+        attack_train_loader = DataLoader(train_ds, batch_size=256, shuffle=True)
+        attack_val_loader = DataLoader(val_ds, batch_size=256, shuffle=False)
+
+        logger.info(f"✅ Attack classifier data prepared:")
+        logger.info(f"  Training samples: {len(train_ds)}")
+        logger.info(f"  Validation samples: {len(val_ds)}")
+
+        return attack_train_loader, attack_val_loader
     
-    def train_model(self, train_loader, val_loader):
+    def train_model(self, train_loader, val_loader, data_prep=None):
         """ENHANCED Complete two-stage training loop"""
         logger.info("🎬 ENHANCED TWO-STAGE TRAINING...")
         logger.info("🎯 Stage 1: Anomaly Detection (Autoencoder)")
@@ -391,9 +435,16 @@ class FixedAutoencoderTrainer:
         
         # Stage 2: Train attack type classifier
         logger.info("🎯 Starting Stage 2: Attack Type Classification...")
-        attack_train_loader, attack_val_loader = self.prepare_attack_type_data(train_loader, val_loader)
-        
-        if attack_train_loader and attack_val_loader:
+        if self.attack_classifier is None and self.attack_category_classes is not None:
+            self.attack_classifier = AttackTypeClassifier(
+                input_dim=78,
+                num_classes=len(self.attack_category_classes)
+            ).to(self.device)
+            self.attack_optimizer = optim.Adam(self.attack_classifier.parameters(), lr=0.001)
+
+        attack_train_loader, attack_val_loader = self.prepare_attack_type_data(data_prep)
+
+        if attack_train_loader and attack_val_loader and self.attack_classifier is not None:
             for epoch in range(10):  # Fewer epochs for attack classifier
                 epoch_start_time = time.time()
                 
@@ -409,6 +460,12 @@ class FixedAutoencoderTrainer:
                 logger.info(f"Attack Classifier Epoch {epoch + 1}/10:")
                 logger.info(f"  Train Loss: {train_loss:.4f}, Accuracy: {train_acc:.4f}")
                 logger.info(f"  Val Loss: {val_loss:.4f}, Accuracy: {val_acc:.4f}")
+
+            # Persist trained stage-2 weights in the checkpoint used by metrics scripts
+            try:
+                self.save_checkpoint(self.training_history['epochs'][-1], best_val_loss, is_best=True)
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to save final two-stage checkpoint: {e}")
         
         total_training_time = time.time() - start_time
         
@@ -429,7 +486,8 @@ class FixedAutoencoderTrainer:
     def predict_two_stage(self, features):
         """Two-stage prediction: anomaly detection + attack type classification"""
         self.model.eval()
-        self.attack_classifier.eval()
+        if self.attack_classifier is not None:
+            self.attack_classifier.eval()
         
         with torch.no_grad():
             features = features.to(self.device)
@@ -447,17 +505,17 @@ class FixedAutoencoderTrainer:
             attack_confidences = []
             
             for i, is_anomaly in enumerate(anomaly_predictions):
-                if is_anomaly.item() == 1:  # If anomaly detected
+                if is_anomaly.item() == 1 and self.attack_classifier is not None:
                     attack_output = self.attack_classifier(features[i:i+1])
                     attack_probs = torch.softmax(attack_output, dim=1)
                     attack_pred = torch.argmax(attack_probs, dim=1).item()
                     attack_conf = torch.max(attack_probs).item()
-                    
+
                     attack_predictions.append(attack_pred)
                     attack_confidences.append(attack_conf)
                 else:
-                    attack_predictions.append(0)  # BENIGN
-                    attack_confidences.append(1.0)  # High confidence for normal
+                    attack_predictions.append(-1)
+                    attack_confidences.append(0.0)
         
         return {
             'anomaly_predictions': anomaly_predictions.cpu().numpy(),
@@ -478,17 +536,18 @@ class FixedAutoencoderTrainer:
             'config': self._serialize_config(),
             'training_history': self.training_history,
             'attack_types': self.attack_types,
+            'attack_category_classes': self.attack_category_classes,
             'two_stage_enabled': True
         }
         
         # Save latest checkpoint
-        checkpoint_path = Path("model_artifacts/latest_checkpoint_fixed.pth")
-        checkpoint_path.parent.mkdir(exist_ok=True)
+        checkpoint_path = ARTIFACTS_DIR / "latest_checkpoint_fixed.pth"
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
         torch.save(checkpoint, checkpoint_path)
         
         # Save best checkpoint
         if is_best:
-            best_path = Path("model_artifacts/best_autoencoder_fixed.pth")
+            best_path = ARTIFACTS_DIR / "best_autoencoder_fixed.pth"
             torch.save(checkpoint, best_path)
             logger.info(f"New best model saved with validation loss: {val_loss:.6f}")
     
@@ -637,10 +696,11 @@ class FixedAutoencoderTrainer:
         plt.grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig('model_artifacts/two_stage_training_curves.png', dpi=300, bbox_inches='tight')
+        ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+        plt.savefig(ARTIFACTS_DIR / 'two_stage_training_curves.png', dpi=300, bbox_inches='tight')
         plt.show()
         
-        logger.info("Two-stage training curves saved to model_artifacts/two_stage_training_curves.png")
+        logger.info(f"Two-stage training curves saved to {ARTIFACTS_DIR / 'two_stage_training_curves.png'}")
     
     def save_training_results(self):
         """Save ENHANCED training results to JSON"""
@@ -655,7 +715,7 @@ class FixedAutoencoderTrainer:
             'two_stage_enabled': True
         }
         
-        results_path = Path("model_artifacts/training_results_fixed.json")
+        results_path = ARTIFACTS_DIR / "training_results_fixed.json"
         with open(results_path, 'w') as f:
             json.dump(results, f, indent=2)
         
@@ -696,6 +756,17 @@ class FixedDataPreparation(DataPreparation):
         # Extract labels
         normal_labels = self.normal_data['Binary_Label'].values
         anomaly_labels = self.anomaly_data['Binary_Label'].values
+
+        # Extract attack categories (for stage-2)
+        if 'Attack_Category' in self.normal_data.columns:
+            normal_categories = self.normal_data['Attack_Category'].astype(str).fillna('Normal').values
+        else:
+            normal_categories = np.array(['Normal'] * len(self.normal_data))
+
+        if 'Attack_Category' in self.anomaly_data.columns:
+            anomaly_categories = self.anomaly_data['Attack_Category'].astype(str).fillna('Other').values
+        else:
+            anomaly_categories = np.array(['Other'] * len(self.anomaly_data))
         
         # Fit scaler on normal data only (to avoid data leakage)
         self.scaler = StandardScaler()
@@ -712,7 +783,14 @@ class FixedDataPreparation(DataPreparation):
         logger.info(f"  NaN count in normal features: {normal_nan_count}")
         logger.info(f"  NaN count in anomaly features: {anomaly_nan_count}")
         
-        return normal_features_scaled, normal_labels, anomaly_features_scaled, anomaly_labels
+        return (
+            normal_features_scaled,
+            normal_labels,
+            anomaly_features_scaled,
+            anomaly_labels,
+            normal_categories,
+            anomaly_categories,
+        )
 
 
 def test_fixed_training_pipeline():
@@ -734,12 +812,16 @@ def test_fixed_training_pipeline():
         logger.info("✅ FIXED data preparation complete")
         
         # Step 3: Initialize ENHANCED two-stage trainer
-        trainer = FixedAutoencoderTrainer(config)
+        trainer = FixedAutoencoderTrainer(
+            config,
+            attack_category_classes=getattr(data_prep, 'attack_category_classes', None),
+            attack_category_encoder=getattr(data_prep, 'attack_category_encoder', None),
+        )
         logger.info("✅ ENHANCED two-stage trainer initialized")
         
         # Step 4: Train both stages
         logger.info("🏋️ Starting ENHANCED two-stage model training...")
-        training_history = trainer.train_model(train_loader, val_loader)
+        training_history = trainer.train_model(train_loader, val_loader, data_prep=data_prep)
         logger.info("✅ ENHANCED two-stage model training complete")
         
         # Step 5: Evaluate model
@@ -760,7 +842,9 @@ def test_fixed_training_pipeline():
             attack_conf = two_stage_results['attack_confidences'][i]
             
             status = "ANOMALY" if anomaly_pred == 1 else "NORMAL"
-            attack_type = trainer.attack_types[attack_pred] if attack_pred < len(trainer.attack_types) else "Unknown"
+            attack_type = "N/A"
+            if attack_pred is not None and attack_pred >= 0 and trainer.attack_types is not None and attack_pred < len(trainer.attack_types):
+                attack_type = trainer.attack_types[attack_pred]
             
             logger.info(f"  Sample {i+1}: {status} → {attack_type} (confidence: {attack_conf:.3f})")
         
@@ -781,7 +865,47 @@ def test_fixed_training_pipeline():
 
 
 if __name__ == "__main__":
-    success = test_fixed_training_pipeline()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--stage2-only", action="store_true")
+    args = parser.parse_args()
+
+    if args.stage2_only:
+        try:
+            config = AutoencoderConfig()
+            data_prep = FixedDataPreparation()
+            data_prep.prepare_data(batch_size=config.batch_size)
+
+            checkpoint_path = ARTIFACTS_DIR / "latest_checkpoint_fixed.pth"
+            if not checkpoint_path.exists():
+                raise FileNotFoundError("latest_checkpoint_fixed.pth not found")
+            checkpoint = torch.load(checkpoint_path, map_location='cpu')
+
+            trainer = FixedAutoencoderTrainer(
+                config,
+                attack_category_classes=getattr(data_prep, 'attack_category_classes', None),
+                attack_category_encoder=getattr(data_prep, 'attack_category_encoder', None),
+            )
+            trainer.model.load_state_dict(checkpoint['model_state_dict'])
+
+            attack_train_loader, attack_val_loader = trainer.prepare_attack_type_data(data_prep)
+            if attack_train_loader and attack_val_loader and trainer.attack_classifier is not None:
+                for epoch in range(10):
+                    train_loss, train_acc = trainer.train_attack_classifier_epoch(attack_train_loader)
+                    val_loss, val_acc = trainer.validate_attack_classifier_epoch(attack_val_loader)
+                    trainer.training_history['attack_train_loss'].append(train_loss)
+                    trainer.training_history['attack_val_loss'].append(val_loss)
+                    trainer.training_history['attack_accuracy'].append(train_acc)
+                    logger.info(f"Attack Classifier Epoch {epoch + 1}/10:")
+                    logger.info(f"  Train Loss: {train_loss:.4f}, Accuracy: {train_acc:.4f}")
+                    logger.info(f"  Val Loss: {val_loss:.4f}, Accuracy: {val_acc:.4f}")
+
+                trainer.save_checkpoint(0, checkpoint.get('val_loss', 0.0), is_best=True)
+            success = True
+        except Exception as e:
+            logger.error(f"❌ Stage2-only training failed: {e}")
+            success = False
+    else:
+        success = test_fixed_training_pipeline()
     
     if success:
         logger.info("🎉 ENHANCED training_pipeline.py - TWO-STAGE COMPLETE!")

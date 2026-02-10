@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 from pathlib import Path
 import json
 import logging
@@ -46,10 +47,39 @@ class CloudAnomalyDataset(Dataset):
         return self.features[idx]
 
 
+class TwoStageCloudAnomalyDataset(Dataset):
+    """Dataset returning features with both binary and attack-category labels."""
+
+    def __init__(self, features: np.ndarray, binary_labels: np.ndarray, category_labels: np.ndarray):
+        self.features = torch.FloatTensor(features)
+        self.binary_labels = torch.LongTensor(binary_labels)
+        self.category_labels = torch.LongTensor(category_labels)
+
+    def __len__(self):
+        return len(self.features)
+
+    def __getitem__(self, idx):
+        return self.features[idx], self.binary_labels[idx], self.category_labels[idx]
+
+
+class AttackCategoryDataset(Dataset):
+    """Anomaly-only dataset for stage-2 attack category classification."""
+
+    def __init__(self, features: np.ndarray, category_labels: np.ndarray):
+        self.features = torch.FloatTensor(features)
+        self.category_labels = torch.LongTensor(category_labels)
+
+    def __len__(self):
+        return len(self.features)
+
+    def __getitem__(self, idx):
+        return self.features[idx], self.category_labels[idx]
+
+
 class DataPreparation:
     """Data preparation pipeline for autoencoder training"""
     
-    def __init__(self, data_dir="data_preprocessing/processed_data", 
+    def __init__(self, data_dir=None, 
                  test_size=0.2, validation_split=0.2, random_state=42):
         """
         Initialize data preparation
@@ -60,7 +90,16 @@ class DataPreparation:
             validation_split (float): Proportion of training data for validation
             random_state (int): Random seed for reproducibility
         """
-        self.data_dir = Path(data_dir)
+        ai_root = Path(__file__).resolve().parents[1]
+        if data_dir is None:
+            self.data_dir = ai_root / "data_preprocessing" / "processed_data"
+        else:
+            candidate = Path(data_dir)
+            if not candidate.exists() and not candidate.is_absolute():
+                alt = ai_root / candidate
+                self.data_dir = alt if alt.exists() else candidate
+            else:
+                self.data_dir = candidate
         self.test_size = test_size
         self.validation_split = validation_split
         self.random_state = random_state
@@ -72,6 +111,15 @@ class DataPreparation:
         self.scaler = None
         self.feature_names = None
         self.data_stats = {}
+
+        # Attack category encoder for stage-2 classification
+        self.attack_category_encoder = None
+        self.attack_category_classes = None
+
+        # Stage-2 anomaly-only dataloaders
+        self.attack_train_loader = None
+        self.attack_val_loader = None
+        self.attack_test_loader = None
         
         logger.info(f"DataPreparation initialized:")
         logger.info(f"  Data directory: {self.data_dir}")
@@ -112,14 +160,34 @@ class DataPreparation:
         # Combine all datasets
         self.all_data = pd.concat(all_dfs, ignore_index=True)
         logger.info(f"Combined dataset shape: {self.all_data.shape}")
-        
+
         # Extract feature names (exclude label columns)
-        label_columns = ['Binary_Label', 'Attack_Category', 'Attack_Category_Numeric', 'Attack_Type_Numeric']
+        label_columns = [
+            'Binary_Label',
+            'Attack_Category',
+            'Attack_Category_Numeric',
+            'Attack_Type_Numeric',
+            ' Label',
+            'Label',
+        ]
         self.feature_names = [col for col in self.all_data.columns if col not in label_columns]
         
         logger.info(f"Total features: {len(self.feature_names)}")
         logger.info(f"Feature names: {self.feature_names[:10]}...")  # Show first 10
-        
+
+        # Fit an anomaly-only encoder for Attack_Category (stage-2)
+        # Stage-2 is defined as: classify anomalies into attack categories
+        if 'Attack_Category' in self.all_data.columns and 'Binary_Label' in self.all_data.columns:
+            self.attack_category_encoder = LabelEncoder()
+            anomaly_categories = (
+                self.all_data.loc[self.all_data['Binary_Label'] == 1, 'Attack_Category']
+                .astype(str)
+                .fillna('Other')
+            )
+            self.attack_category_encoder.fit(anomaly_categories)
+            self.attack_category_classes = list(self.attack_category_encoder.classes_)
+            logger.info(f"Attack categories (anomaly-only): {len(self.attack_category_classes)}")
+
         return self.all_data
     
     def separate_normal_anomaly_data(self):
@@ -167,6 +235,17 @@ class DataPreparation:
         # Extract labels
         normal_labels = self.normal_data['Binary_Label'].values
         anomaly_labels = self.anomaly_data['Binary_Label'].values
+
+        # Extract attack categories (for stage-2)
+        if 'Attack_Category' in self.normal_data.columns:
+            normal_categories = self.normal_data['Attack_Category'].astype(str).fillna('Normal').values
+        else:
+            normal_categories = np.array(['Normal'] * len(self.normal_data))
+
+        if 'Attack_Category' in self.anomaly_data.columns:
+            anomaly_categories = self.anomaly_data['Attack_Category'].astype(str).fillna('Other').values
+        else:
+            anomaly_categories = np.array(['Other'] * len(self.anomaly_data))
         
         # Fit scaler on normal data only (to avoid data leakage)
         self.scaler = StandardScaler()
@@ -179,9 +258,24 @@ class DataPreparation:
         logger.info(f"  Feature mean (normal): {np.mean(normal_features_scaled, axis=0)[:5]}")
         logger.info(f"  Feature std (normal): {np.std(normal_features_scaled, axis=0)[:5]}")
         
-        return normal_features_scaled, normal_labels, anomaly_features_scaled, anomaly_labels
+        return (
+            normal_features_scaled,
+            normal_labels,
+            anomaly_features_scaled,
+            anomaly_labels,
+            normal_categories,
+            anomaly_categories,
+        )
     
-    def create_train_test_splits(self, normal_features, normal_labels, anomaly_features, anomaly_labels):
+    def create_train_test_splits(
+        self,
+        normal_features,
+        normal_labels,
+        anomaly_features,
+        anomaly_labels,
+        normal_categories=None,
+        anomaly_categories=None,
+    ):
         """Create train, validation, and test splits"""
         logger.info("Creating train/validation/test splits...")
         
@@ -204,10 +298,23 @@ class DataPreparation:
         
         # Split anomaly data (for testing only)
         test_anomaly, test_anomaly_labels = anomaly_features, anomaly_labels
-        
+
         # Combine test sets
         test_features = np.concatenate([test_normal, test_anomaly], axis=0)
         test_labels = np.concatenate([test_normal_labels, test_anomaly_labels], axis=0)
+
+        # Optional category labels for two-stage evaluation
+        # - Normal samples: category label = -1 (not applicable)
+        # - Anomaly samples: encoded attack category label
+        test_category_labels = None
+        if anomaly_categories is not None and self.attack_category_encoder is not None:
+            try:
+                anomaly_test_categories = np.array(anomaly_categories).astype(str)
+                anomaly_encoded = self.attack_category_encoder.transform(anomaly_test_categories)
+                normal_encoded = -1 * np.ones(len(test_normal_labels), dtype=np.int64)
+                test_category_labels = np.concatenate([normal_encoded, anomaly_encoded], axis=0)
+            except Exception as e:
+                logger.warning(f"Failed to create category labels for two-stage evaluation: {e}")
         
         logger.info(f"Data splits created:")
         logger.info(f"  Training (normal only): {train_normal.shape}")
@@ -215,7 +322,7 @@ class DataPreparation:
         logger.info(f"  Test (mixed): {test_features.shape}")
         logger.info(f"  Test - Normal: {len(test_normal_labels)}, Anomaly: {len(test_anomaly_labels)}")
         
-        return {
+        splits = {
             'train_features': train_normal,
             'train_labels': train_normal_labels,
             'val_features': val_normal,
@@ -223,6 +330,23 @@ class DataPreparation:
             'test_features': test_features,
             'test_labels': test_labels
         }
+
+        if test_category_labels is not None:
+            splits['test_category_labels'] = test_category_labels
+
+        return splits
+
+    def create_two_stage_test_loader(self, splits, batch_size=128):
+        """Create a DataLoader yielding (features, binary_label, attack_category_label)."""
+        if 'test_category_labels' not in splits:
+            raise ValueError("Two-stage labels not available in splits")
+
+        test_ds = TwoStageCloudAnomalyDataset(
+            splits['test_features'],
+            splits['test_labels'],
+            splits['test_category_labels'],
+        )
+        return DataLoader(test_ds, batch_size=batch_size, shuffle=False)
     
     def create_data_loaders(self, splits, batch_size=128):
         """Create PyTorch DataLoaders"""
@@ -256,23 +380,86 @@ class DataPreparation:
         self.separate_normal_anomaly_data()
         
         # Step 3: Extract and normalize features
-        normal_features, normal_labels, anomaly_features, anomaly_labels = self.extract_features_and_normalize()
+        (
+            normal_features,
+            normal_labels,
+            anomaly_features,
+            anomaly_labels,
+            normal_categories,
+            anomaly_categories,
+        ) = self.extract_features_and_normalize()
         
         # Step 4: Create train/test splits
-        splits = self.create_train_test_splits(normal_features, normal_labels, anomaly_features, anomaly_labels)
+        splits = self.create_train_test_splits(
+            normal_features,
+            normal_labels,
+            anomaly_features,
+            anomaly_labels,
+            normal_categories=normal_categories,
+            anomaly_categories=anomaly_categories,
+        )
         
         # Step 5: Create data loaders
         train_loader, val_loader, test_loader = self.create_data_loaders(splits, batch_size)
+
+        test_two_stage_loader = None
+        if 'test_category_labels' in splits:
+            try:
+                test_two_stage_loader = self.create_two_stage_test_loader(splits, batch_size)
+            except Exception as e:
+                logger.warning(f"Failed to create two-stage test loader: {e}")
+
+        # Stage-2: create anomaly-only train/val/test loaders (prevents leakage)
+        if self.attack_category_encoder is not None:
+            try:
+                anomaly_cats = np.array(anomaly_categories).astype(str)
+                y_anom = self.attack_category_encoder.transform(anomaly_cats)
+
+                X_train, X_tmp, y_train, y_tmp = train_test_split(
+                    anomaly_features,
+                    y_anom,
+                    test_size=0.3,
+                    random_state=self.random_state,
+                    stratify=y_anom,
+                )
+                X_val, X_test, y_val, y_test = train_test_split(
+                    X_tmp,
+                    y_tmp,
+                    test_size=0.5,
+                    random_state=self.random_state,
+                    stratify=y_tmp,
+                )
+
+                train_ds = AttackCategoryDataset(X_train, y_train)
+                val_ds = AttackCategoryDataset(X_val, y_val)
+                test_ds = AttackCategoryDataset(X_test, y_test)
+
+                self.attack_train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+                self.attack_val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+                self.attack_test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
+
+                logger.info("✅ Stage-2 anomaly-only splits created:")
+                logger.info(f"  Attack train: {len(train_ds)}")
+                logger.info(f"  Attack val: {len(val_ds)}")
+                logger.info(f"  Attack test: {len(test_ds)}")
+            except Exception as e:
+                logger.warning(f"Failed to build stage-2 attack-category loaders: {e}")
         
         # Prepare results dictionary
         results = {
             'train_loader': train_loader,
             'val_loader': val_loader,
             'test_loader': test_loader,
+            'test_two_stage_loader': test_two_stage_loader,
+            'attack_train_loader': self.attack_train_loader,
+            'attack_val_loader': self.attack_val_loader,
+            'attack_test_loader': self.attack_test_loader,
             'splits': splits,
             'scaler': self.scaler,
             'feature_names': self.feature_names,
-            'data_stats': self.data_stats
+            'data_stats': self.data_stats,
+            'attack_category_encoder': self.attack_category_encoder,
+            'attack_category_classes': self.attack_category_classes,
         }
         
         logger.info("✅ Data preparation complete!")

@@ -40,7 +40,7 @@ from routes.model_routes import (
     health_check,
     root_endpoint
 )
-# XAI routes - Now integrated with completed phases
+# XAI routes - Enhanced version with real feature names (imported first to take precedence)
 from routes.xai_routes_enhanced import (
     get_explanation,
     explain_anomaly,

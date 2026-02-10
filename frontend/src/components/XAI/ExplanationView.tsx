@@ -29,6 +29,48 @@ import {
   FeatureImportance 
 } from '../../api/api';
 
+// Network traffic feature descriptions for security analysts
+const FEATURE_DESCRIPTIONS: { [key: string]: string } = {
+  "Flow Duration": "Total duration of the flow in microseconds",
+  "Total Fwd Packets": "Total number of forward packets in the flow",
+  "Total Backward Packets": "Total number of backward packets in the flow",
+  "Total Length of Fwd Packets": "Total size of forward packets in bytes",
+  "Total Length of Bwd Packets": "Total size of backward packets in bytes",
+  "Flow Bytes/s": "Flow rate in bytes per second",
+  "Flow Packets/s": "Flow rate in packets per second",
+  "Flow IAT Mean": "Mean time between two consecutive packets",
+  "Flow IAT Std": "Standard deviation of time between two packets",
+  "Flow IAT Max": "Maximum time between two consecutive packets",
+  "Flow IAT Min": "Minimum time between two consecutive packets",
+  "Fwd IAT Mean": "Mean time between two consecutive forward packets",
+  "Bwd IAT Mean": "Mean time between two consecutive backward packets",
+  "Fwd Header Length": "Total size of forward packet headers",
+  "Bwd Header Length": "Total size of backward packet headers",
+  "Min Packet Length": "Minimum packet size in the flow",
+  "Max Packet Length": "Maximum packet size in the flow",
+  "Packet Length Mean": "Mean packet size in the flow",
+  "Packet Length Std": "Standard deviation of packet sizes",
+  "Packet Length Variance": "Variance of packet sizes",
+  "FIN Flag Count": "Number of FIN flags in forward packets",
+  "SYN Flag Count": "Number of SYN flags in forward packets",
+  "RST Flag Count": "Number of RST flags in forward packets",
+  "PSH Flag Count": "Number of PSH flags in forward packets",
+  "ACK Flag Count": "Number of ACK flags in forward packets",
+  "URG Flag Count": "Number of URG flags in forward packets",
+  "Down/Up Ratio": "Ratio of download to upload traffic",
+  "Average Packet Size": "Average size of packets in the flow",
+  "Fwd Segment Size Avg": "Average size of forward segments",
+  "Bwd Segment Size Avg": "Average size of backward segments",
+  "Active Mean": "Mean active time before becoming idle",
+  "Active Std": "Standard deviation of active time",
+  "Active Max": "Maximum active time",
+  "Active Min": "Minimum active time",
+  "Idle Mean": "Mean idle time before becoming active",
+  "Idle Std": "Standard deviation of idle time",
+  "Idle Max": "Maximum idle time",
+  "Idle Min": "Minimum idle time"
+};
+
 interface ExplanationViewProps {
   explanation: ExplanationData | null;
   isLoading?: boolean;
@@ -36,14 +78,20 @@ interface ExplanationViewProps {
 
 const ExplanationView: React.FC<ExplanationViewProps> = ({ 
   explanation, 
-  isLoading = false,
-  modelSource = 'mock' // Default to mock data for now
+  isLoading = false
 }) => {
   // Only process data if explanation exists
-  const shapData = explanation?.feature_importances?.map(item => ({
-    name: item.feature.replace('_', ' '),
-    value: parseFloat((item.importance).toFixed(4)) // Display raw importance, not percentage for SHAP values
-  })) || [];
+  const shapData = explanation?.feature_importances?.map((item: any, index: number) => {
+    // Use the feature name directly from backend (already formatted)
+    const featureName = item.feature || `Feature ${index + 1}`;
+    
+    return {
+      name: featureName,
+      value: parseFloat((item.importance).toFixed(4)), // Display raw importance, not percentage for SHAP values
+      featureIndex: item.feature_index || index, // Include feature index for reference
+      description: FEATURE_DESCRIPTIONS[featureName] || "Network traffic feature"
+    };
+  }) || [];
 
   if (isLoading) {
     return (
@@ -144,11 +192,19 @@ const ExplanationView: React.FC<ExplanationViewProps> = ({
                   tickLine={{ stroke: 'var(--border)' }}
                 />
                 <Tooltip 
-                  formatter={(value) => [value, 'Importance']}
+                  formatter={(value, name, props: any) => [
+                    value, 
+                    'SHAP Value'
+                  ]}
+                  labelFormatter={(label) => {
+                    const featureData = shapData.find(item => item.name === label);
+                    return `${label}${featureData?.description ? ': ' + featureData.description : ''}`;
+                  }}
                   contentStyle={{ 
                     backgroundColor: 'var(--card)', 
                     borderColor: 'var(--border)',
-                    color: 'var(--card-foreground)'
+                    color: 'var(--card-foreground)',
+                    maxWidth: '300px'
                   }}
                   labelStyle={{ color: 'var(--card-foreground)' }}
                 />
@@ -160,6 +216,38 @@ const ExplanationView: React.FC<ExplanationViewProps> = ({
           </div>
         </CardContent>
       </Card>
+      
+      {/* Feature Description Card */}
+      {shapData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Info className="mr-2 h-5 w-5 text-blue-500" />
+              Top Feature Descriptions
+            </CardTitle>
+            <CardDescription>
+              Understanding the most important network traffic features
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {shapData.slice(0, 5).map((feature, index) => (
+                <div key={feature.featureIndex} className="border-l-4 border-purple-500 pl-3">
+                  <div className="font-medium text-sm">{feature.name}</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {feature.description}
+                  </div>
+                  <div className="text-xs font-mono mt-1">
+                    SHAP Value: <span className={feature.value > 0 ? 'text-red-500' : 'text-green-500'}>
+                      {feature.value.toFixed(4)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       {explanation.contributingFactors && explanation.contributingFactors.length > 0 && (
         <Card>
