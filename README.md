@@ -1,40 +1,37 @@
 # Cloud Anomaly Detection using Federated Learning (FL) and Explainable AI (XAI)
 
-End-to-end system for **privacy-preserving cloud/network anomaly detection** using **Federated Learning** and **Explainable AI (XAI)**, with a **FastAPI backend** and a **React (Vite + TypeScript) frontend**.
+## Project Overview
 
-This repository contains:
+This is an **end-to-end research and production system** for **privacy-preserving cloud/network anomaly detection** that combines:
 
-- `AI/` — model development, federated training utilities, XAI modules, and saved artifacts/plots
-- `backend/` — FastAPI API server (inference, anomaly management, XAI endpoints)
-- `frontend/` — React UI for dashboards, anomalies, and explanations
+- **Federated Learning (FL)**: Enables multiple organizations to collaboratively train anomaly detection models without sharing raw data, preserving privacy while scaling the training dataset across 8 clients using the complete CICIDS2017 dataset.
 
----
+- **Explainable AI (XAI)**: Provides transparent, interpretable explanations for model decisions using SHAP, LIME, and gradient-based methods across a two-stage detection pipeline (anomaly detection → attack classification).
 
-## Results (examples)
+- **Full-Stack Application**: 
+  - **Backend**: FastAPI server with inference, anomaly management, and XAI endpoints
+  - **Frontend**: React (Vite + TypeScript) UI for dashboards, anomaly monitoring, and interactive explanations
 
-These figures are already available in the repository and are embedded here for quick reference.
+### Key Innovations
 
-### Federated learning + model quality
-
-![Centralized vs Federated Comparison](AI/model_artifacts/centralized_vs_federated_comparison.png)
-
-![Federated Convergence Plot](AI/model_artifacts/federated_convergence_plot.png)
-
-![Classification Metrics](AI/model_artifacts/classification_metrics.png)
-
-![Two-Stage Classification Metrics](AI/model_artifacts/two_stage_classification_metrics.png)
-
-### XAI (feature importance / explanations)
-
-![SHAP Feature Importance](AI/model_artifacts/feature_importance_shap.png)
-
-### Federated client view (example)
-
-![Client Graph](client_single_graph.png)
+- **Two-Stage Detection**: Autoencoder for anomaly detection + neural classifier for attack type identification
+- **Federated Learning at Scale**: 8 clients with 1.6M+ samples, achieving 88.64% precision
+- **Comprehensive XAI**: Phase-based explainability covering data analysis, autoencoder interpretation, and attack classification
+- **Production Ready**: Complete API, database integration, and responsive web interface
 
 ---
 
-## High-level architecture
+## System Architecture
+
+### High-Level Architecture
+
+![System Architecture](syatem_architecture.png)
+
+### Two-Stage Detection Pipeline
+
+![Two-Stage Detection Pipeline](two_stage_anomaly_detction_pipeline.png)
+
+### Component Architecture
 
 ```
                 +-------------------------------+
@@ -59,6 +56,30 @@ These figures are already available in the repository and are embedded here for 
                 |  Artifacts in AI/model_artifacts
                 +-------------------------------+
 ```
+
+---
+
+## Results and Performance
+
+### Federated Learning Performance
+
+![Centralized vs Federated Comparison](AI/model_artifacts/centralized_vs_federated_comparison.png)
+
+![Federated Convergence Plot](AI/model_artifacts/federated_convergence_plot.png)
+
+### Model Performance Metrics
+
+![Classification Metrics](AI/model_artifacts/classification_metrics.png)
+
+![Two-Stage Classification Metrics](AI/model_artifacts/two_stage_classification_metrics.png)
+
+### Explainable AI (XAI) Results
+
+![SHAP Feature Importance](AI/model_artifacts/feature_importance_shap.png)
+
+### Federated Client Performance
+
+![Client Graph](client_single_graph.png)
 
 ---
 
