@@ -1,0 +1,581 @@
+[
+  {
+    "seed": 42,
+    "stage1_recall": 0.613836699799329,
+    "stage2_oracle_accuracy": 0.9255262870063862,
+    "true_end_to_end_f1": 0.4674647021086538,
+    "timestamp": "2026-02-13T00:07:47.793046",
+    "full_metrics": {
+      "two_stage_enabled": true,
+      "stage1_anomaly_detection": {
+        "accuracy": 0.6246698060714683,
+        "precision": 0.7674577614547808,
+        "recall": 0.613836699799329,
+        "f1_score": 0.6821047253010285,
+        "roc_auc": 0.6752845376344458,
+        "confusion_matrix": [
+          [
+            151610,
+            83325
+          ],
+          [
+            173000,
+            274997
+          ]
+        ]
+      },
+      "stage2_attack_category_classification": {
+        "oracle_true_anomalies": {
+          "accuracy": 0.9255262870063862,
+          "precision_macro": 0.567372114421661,
+          "recall_macro": 0.5248245751330195,
+          "f1_macro": 0.5421689736864297,
+          "precision_weighted": 0.9284981683992969,
+          "recall_weighted": 0.9255262870063862,
+          "f1_weighted": 0.9232029728979099,
+          "support": 447997,
+          "confusion_matrix": [
+            [
+              0,
+              37,
+              0,
+              218,
+              20
+            ],
+            [
+              0,
+              113149,
+              0,
+              11479,
+              587
+            ],
+            [
+              0,
+              2,
+              0,
+              12,
+              11
+            ],
+            [
+              0,
+              2774,
+              0,
+              253062,
+              667
+            ],
+            [
+              0,
+              1842,
+              0,
+              15715,
+              48422
+            ]
+          ],
+          "classification_report": {
+            "Botnet": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 275.0
+            },
+            "DoS": {
+              "precision": 0.9604852127262232,
+              "recall": 0.9036377430818991,
+              "f1-score": 0.9311946802513383,
+              "support": 125215.0
+            },
+            "Infiltration": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 25.0
+            },
+            "Other": {
+              "precision": 0.9022268491118987,
+              "recall": 0.986584952222781,
+              "f1-score": 0.9425221000802624,
+              "support": 256503.0
+            },
+            "PortScan": {
+              "precision": 0.9741485102701832,
+              "recall": 0.7339001803604177,
+              "f1-score": 0.8371280881005481,
+              "support": 65979.0
+            },
+            "accuracy": 0.9255262870063862,
+            "macro avg": {
+              "precision": 0.567372114421661,
+              "recall": 0.5248245751330195,
+              "f1-score": 0.5421689736864297,
+              "support": 447997.0
+            },
+            "weighted avg": {
+              "precision": 0.9284981683992969,
+              "recall": 0.9255262870063862,
+              "f1-score": 0.9232029728979099,
+              "support": 447997.0
+            }
+          }
+        },
+        "end_to_end_detected_samples": {
+          "accuracy": 0.9619159481739801,
+          "precision_macro": 0.5813904687905154,
+          "recall_macro": 0.43886571555351805,
+          "f1_macro": 0.4674647021086538,
+          "precision_weighted": 0.9626108818527466,
+          "recall_weighted": 0.9619159481739801,
+          "f1_weighted": 0.9556408741788596,
+          "support": 274997,
+          "confusion_matrix": [
+            [
+              0,
+              2,
+              0,
+              89,
+              1
+            ],
+            [
+              0,
+              80150,
+              0,
+              4340,
+              37
+            ],
+            [
+              0,
+              0,
+              0,
+              7,
+              1
+            ],
+            [
+              0,
+              112,
+              0,
+              182456,
+              34
+            ],
+            [
+              0,
+              213,
+              0,
+              5637,
+              1918
+            ]
+          ]
+        }
+      },
+      "dataset_info": {
+        "total_samples": 682932,
+        "normal_samples": 234935,
+        "anomaly_samples": 447997,
+        "detected_anomalies": 358322,
+        "attack_classifications": 358322
+      },
+      "model_info": {
+        "autoencoder_params": 15746,
+        "attack_classifier_params": 20613,
+        "total_params": 36359,
+        "attack_categories": [
+          "Botnet",
+          "DoS",
+          "Infiltration",
+          "Other",
+          "PortScan"
+        ]
+      },
+      "reconstruction_error_stats": {
+        "mean": 1.281679630279541,
+        "std": 7.744212627410889,
+        "min": 0.04191510006785393,
+        "max": 4099.09814453125
+      }
+    }
+  },
+  {
+    "seed": 123,
+    "stage1_recall": 0.613836699799329,
+    "stage2_oracle_accuracy": 0.9255262870063862,
+    "true_end_to_end_f1": 0.4674647021086538,
+    "timestamp": "2026-02-13T00:10:25.251455",
+    "full_metrics": {
+      "two_stage_enabled": true,
+      "stage1_anomaly_detection": {
+        "accuracy": 0.6246698060714683,
+        "precision": 0.7674577614547808,
+        "recall": 0.613836699799329,
+        "f1_score": 0.6821047253010285,
+        "roc_auc": 0.6752845376344458,
+        "confusion_matrix": [
+          [
+            151610,
+            83325
+          ],
+          [
+            173000,
+            274997
+          ]
+        ]
+      },
+      "stage2_attack_category_classification": {
+        "oracle_true_anomalies": {
+          "accuracy": 0.9255262870063862,
+          "precision_macro": 0.567372114421661,
+          "recall_macro": 0.5248245751330195,
+          "f1_macro": 0.5421689736864297,
+          "precision_weighted": 0.9284981683992969,
+          "recall_weighted": 0.9255262870063862,
+          "f1_weighted": 0.9232029728979099,
+          "support": 447997,
+          "confusion_matrix": [
+            [
+              0,
+              37,
+              0,
+              218,
+              20
+            ],
+            [
+              0,
+              113149,
+              0,
+              11479,
+              587
+            ],
+            [
+              0,
+              2,
+              0,
+              12,
+              11
+            ],
+            [
+              0,
+              2774,
+              0,
+              253062,
+              667
+            ],
+            [
+              0,
+              1842,
+              0,
+              15715,
+              48422
+            ]
+          ],
+          "classification_report": {
+            "Botnet": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 275.0
+            },
+            "DoS": {
+              "precision": 0.9604852127262232,
+              "recall": 0.9036377430818991,
+              "f1-score": 0.9311946802513383,
+              "support": 125215.0
+            },
+            "Infiltration": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 25.0
+            },
+            "Other": {
+              "precision": 0.9022268491118987,
+              "recall": 0.986584952222781,
+              "f1-score": 0.9425221000802624,
+              "support": 256503.0
+            },
+            "PortScan": {
+              "precision": 0.9741485102701832,
+              "recall": 0.7339001803604177,
+              "f1-score": 0.8371280881005481,
+              "support": 65979.0
+            },
+            "accuracy": 0.9255262870063862,
+            "macro avg": {
+              "precision": 0.567372114421661,
+              "recall": 0.5248245751330195,
+              "f1-score": 0.5421689736864297,
+              "support": 447997.0
+            },
+            "weighted avg": {
+              "precision": 0.9284981683992969,
+              "recall": 0.9255262870063862,
+              "f1-score": 0.9232029728979099,
+              "support": 447997.0
+            }
+          }
+        },
+        "end_to_end_detected_samples": {
+          "accuracy": 0.9619159481739801,
+          "precision_macro": 0.5813904687905154,
+          "recall_macro": 0.43886571555351805,
+          "f1_macro": 0.4674647021086538,
+          "precision_weighted": 0.9626108818527466,
+          "recall_weighted": 0.9619159481739801,
+          "f1_weighted": 0.9556408741788596,
+          "support": 274997,
+          "confusion_matrix": [
+            [
+              0,
+              2,
+              0,
+              89,
+              1
+            ],
+            [
+              0,
+              80150,
+              0,
+              4340,
+              37
+            ],
+            [
+              0,
+              0,
+              0,
+              7,
+              1
+            ],
+            [
+              0,
+              112,
+              0,
+              182456,
+              34
+            ],
+            [
+              0,
+              213,
+              0,
+              5637,
+              1918
+            ]
+          ]
+        }
+      },
+      "dataset_info": {
+        "total_samples": 682932,
+        "normal_samples": 234935,
+        "anomaly_samples": 447997,
+        "detected_anomalies": 358322,
+        "attack_classifications": 358322
+      },
+      "model_info": {
+        "autoencoder_params": 15746,
+        "attack_classifier_params": 20613,
+        "total_params": 36359,
+        "attack_categories": [
+          "Botnet",
+          "DoS",
+          "Infiltration",
+          "Other",
+          "PortScan"
+        ]
+      },
+      "reconstruction_error_stats": {
+        "mean": 1.281679630279541,
+        "std": 7.744212627410889,
+        "min": 0.04191510006785393,
+        "max": 4099.09814453125
+      }
+    }
+  },
+  {
+    "seed": 999,
+    "stage1_recall": 0.613836699799329,
+    "stage2_oracle_accuracy": 0.9255262870063862,
+    "true_end_to_end_f1": 0.4674647021086538,
+    "timestamp": "2026-02-13T00:13:06.647126",
+    "full_metrics": {
+      "two_stage_enabled": true,
+      "stage1_anomaly_detection": {
+        "accuracy": 0.6246698060714683,
+        "precision": 0.7674577614547808,
+        "recall": 0.613836699799329,
+        "f1_score": 0.6821047253010285,
+        "roc_auc": 0.6752845376344458,
+        "confusion_matrix": [
+          [
+            151610,
+            83325
+          ],
+          [
+            173000,
+            274997
+          ]
+        ]
+      },
+      "stage2_attack_category_classification": {
+        "oracle_true_anomalies": {
+          "accuracy": 0.9255262870063862,
+          "precision_macro": 0.567372114421661,
+          "recall_macro": 0.5248245751330195,
+          "f1_macro": 0.5421689736864297,
+          "precision_weighted": 0.9284981683992969,
+          "recall_weighted": 0.9255262870063862,
+          "f1_weighted": 0.9232029728979099,
+          "support": 447997,
+          "confusion_matrix": [
+            [
+              0,
+              37,
+              0,
+              218,
+              20
+            ],
+            [
+              0,
+              113149,
+              0,
+              11479,
+              587
+            ],
+            [
+              0,
+              2,
+              0,
+              12,
+              11
+            ],
+            [
+              0,
+              2774,
+              0,
+              253062,
+              667
+            ],
+            [
+              0,
+              1842,
+              0,
+              15715,
+              48422
+            ]
+          ],
+          "classification_report": {
+            "Botnet": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 275.0
+            },
+            "DoS": {
+              "precision": 0.9604852127262232,
+              "recall": 0.9036377430818991,
+              "f1-score": 0.9311946802513383,
+              "support": 125215.0
+            },
+            "Infiltration": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1-score": 0.0,
+              "support": 25.0
+            },
+            "Other": {
+              "precision": 0.9022268491118987,
+              "recall": 0.986584952222781,
+              "f1-score": 0.9425221000802624,
+              "support": 256503.0
+            },
+            "PortScan": {
+              "precision": 0.9741485102701832,
+              "recall": 0.7339001803604177,
+              "f1-score": 0.8371280881005481,
+              "support": 65979.0
+            },
+            "accuracy": 0.9255262870063862,
+            "macro avg": {
+              "precision": 0.567372114421661,
+              "recall": 0.5248245751330195,
+              "f1-score": 0.5421689736864297,
+              "support": 447997.0
+            },
+            "weighted avg": {
+              "precision": 0.9284981683992969,
+              "recall": 0.9255262870063862,
+              "f1-score": 0.9232029728979099,
+              "support": 447997.0
+            }
+          }
+        },
+        "end_to_end_detected_samples": {
+          "accuracy": 0.9619159481739801,
+          "precision_macro": 0.5813904687905154,
+          "recall_macro": 0.43886571555351805,
+          "f1_macro": 0.4674647021086538,
+          "precision_weighted": 0.9626108818527466,
+          "recall_weighted": 0.9619159481739801,
+          "f1_weighted": 0.9556408741788596,
+          "support": 274997,
+          "confusion_matrix": [
+            [
+              0,
+              2,
+              0,
+              89,
+              1
+            ],
+            [
+              0,
+              80150,
+              0,
+              4340,
+              37
+            ],
+            [
+              0,
+              0,
+              0,
+              7,
+              1
+            ],
+            [
+              0,
+              112,
+              0,
+              182456,
+              34
+            ],
+            [
+              0,
+              213,
+              0,
+              5637,
+              1918
+            ]
+          ]
+        }
+      },
+      "dataset_info": {
+        "total_samples": 682932,
+        "normal_samples": 234935,
+        "anomaly_samples": 447997,
+        "detected_anomalies": 358322,
+        "attack_classifications": 358322
+      },
+      "model_info": {
+        "autoencoder_params": 15746,
+        "attack_classifier_params": 20613,
+        "total_params": 36359,
+        "attack_categories": [
+          "Botnet",
+          "DoS",
+          "Infiltration",
+          "Other",
+          "PortScan"
+        ]
+      },
+      "reconstruction_error_stats": {
+        "mean": 1.281679630279541,
+        "std": 7.744212627410889,
+        "min": 0.04191510006785393,
+        "max": 4099.09814453125
+      }
+    }
+  }
+]

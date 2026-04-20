@@ -1,0 +1,21 @@
+TRUE END-TO-END FULL TEST EVALUATION RESULTS
+============================================================
+
+Timestamp: 20260217_125937
+Evaluation Type: Proper end-to-end with 6 classes (Normal + 5 attacks)
+
+KEY RESULTS:
+• True Macro F1: 0.3356
+• True Weighted F1: 0.5897
+• Overall Accuracy: 0.6093
+
+PER-CLASS PERFORMANCE:
+• Normal      : F1=0.542, P=0.467, R=0.645, Support=234,933
+• Botnet      : F1=0.000, P=0.000, R=0.000, Support=   275
+• DoS         : F1=0.697, P=0.764, R=0.640, Support=125,215
+• Infiltration: F1=0.000, P=0.000, R=0.000, Support=    25
+• Other       : F1=0.719, P=0.727, R=0.711, Support=256,503
+• PortScan    : F1=0.056, P=0.739, R=0.029, Support=65,979
+
+FULL CONFUSION MATRIX:
+Predicted ->

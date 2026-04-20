@@ -1,0 +1,122 @@
+{
+  "evaluation_type": "True End-to-End Full Test Evaluation",
+  "timestamp": "20260217_125845",
+  "description": "Properly computed end-to-end performance combining Stage-1 and Stage-2 predictions",
+  "classes": [
+    "Normal",
+    "Botnet",
+    "DoS",
+    "Infiltration",
+    "Other",
+    "PortScan"
+  ],
+  "reconstruction_info": {
+    "total_samples": 682932,
+    "normal_samples": 234935,
+    "anomaly_samples": 447997,
+    "detected_anomalies": 358322,
+    "stage1_cm": [
+      [
+        151610,
+        83325
+      ],
+      [
+        173000,
+        274997
+      ]
+    ],
+    "stage2_cm": [
+      [
+        0,
+        2,
+        0,
+        89,
+        1
+      ],
+      [
+        0,
+        80150,
+        0,
+        4340,
+        37
+      ],
+      [
+        0,
+        0,
+        0,
+        7,
+        1
+      ],
+      [
+        0,
+        112,
+        0,
+        182456,
+        34
+      ],
+      [
+        0,
+        213,
+        0,
+        5637,
+        1918
+      ]
+    ]
+  },
+  "full_confusion_matrix": [
+    [
+      151610,
+      0,
+      24384,
+      0,
+      58336,
+      603
+    ],
+    [
+      183,
+      0,
+      2,
+      0,
+      89,
+      1
+    ],
+    [
+      40688,
+      0,
+      80150,
+      0,
+      4340,
+      37
+    ],
+    [
+      17,
+      0,
+      0,
+      0,
+      7,
+      1
+    ],
+    [
+      73901,
+      0,
+      112,
+      0,
+      182456,
+      34
+    ],
+    [
+      58211,
+      0,
+      213,
+      0,
+      5637,
+      1918
+    ]
+  ],
+  "results": {
+    "per_class_metrics": {
+      "Normal": {
+        "precision": 0.46705277101752873,
+        "recall": 0.6453329247061929,
+        "f1_score": 0.5419065201423305,
+        "support": 

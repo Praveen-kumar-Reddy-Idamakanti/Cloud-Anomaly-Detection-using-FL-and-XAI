@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, ChevronLeft, ChevronRight, Filter, RefreshCw } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, ChevronRight, Filter, RefreshCw, ChevronFirst, ChevronLast } from 'lucide-react';
 import { toast } from 'sonner';
 import Navbar from '../components/Layout/Navbar';
 import Sidebar from '../components/Layout/Sidebar';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -22,8 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { anomaliesApi } from '../api/api';
-import { AnomalyData } from '../data/mockData';
+import { anomaliesApi, AnomalyData } from '../api/api';
 
 const Anomalies: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -32,11 +32,11 @@ const Anomalies: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalAnomalies, setTotalAnomalies] = useState(0);
   const [severityFilter, setSeverityFilter] = useState<string>('all');
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
 
   useEffect(() => {
     fetchAnomalies();
-  }, [page, severityFilter]);
+  }, [page, severityFilter, limit]);
 
   const fetchAnomalies = async () => {
     setIsLoading(true);
@@ -64,6 +64,11 @@ const Anomalies: React.FC = () => {
     fetchAnomalies();
   };
 
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1); // Reset to first page when changing items per page
+  };
+
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const getSeverityColor = (severity: AnomalyData['severity']) => {
@@ -87,6 +92,40 @@ const Anomalies: React.FC = () => {
   };
 
   const totalPages = Math.ceil(totalAnomalies / limit);
+
+  // Pagination helper functions
+  const getPageNumbers = () => {
+    const delta = 2; // Number of pages to show on each side of current page
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i == 1 || i == totalPages || (i >= page - delta && i <= page + delta)) {
+        range.push(i);
+      }
+    }
+
+    range.forEach((i) => {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    });
+
+    return rangeWithDots;
+  };
+
+  const handlePageJump = (pageNumber: number) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setPage(pageNumber);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -118,6 +157,25 @@ const Anomalies: React.FC = () => {
                     <SelectItem value="low">Low</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">Show</span>
+                <Select
+                  value={limit.toString()}
+                  onValueChange={(value) => handleLimitChange(Number(value))}
+                >
+                  <SelectTrigger className="w-[70px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="text-sm text-muted-foreground">entries</span>
               </div>
               <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isLoading}>
                 <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -215,30 +273,100 @@ const Anomalies: React.FC = () => {
             </div>
           </div>
 
-          {/* Pagination */}
+          {/* Enhanced Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-end space-x-2 py-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((old) => Math.max(old - 1, 1))}
-                disabled={page === 1 || isLoading}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span className="sr-only">Previous Page</span>
-              </Button>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-t">
+              {/* Page Info */}
               <div className="text-sm text-muted-foreground">
-                Page {page} of {totalPages}
+                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalAnomalies)} of {totalAnomalies} entries
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((old) => Math.min(old + 1, totalPages))}
-                disabled={page === totalPages || isLoading}
-              >
-                <ChevronRight className="h-4 w-4" />
-                <span className="sr-only">Next Page</span>
-              </Button>
+              
+              {/* Pagination Controls */}
+              <div className="flex items-center space-x-1">
+                {/* First Page */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(1)}
+                  disabled={page === 1 || isLoading}
+                >
+                  <ChevronFirst className="h-4 w-4" />
+                  <span className="sr-only">First Page</span>
+                </Button>
+                
+                {/* Previous Page */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((old) => Math.max(old - 1, 1))}
+                  disabled={page === 1 || isLoading}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="sr-only">Previous Page</span>
+                </Button>
+                
+                {/* Page Numbers */}
+                <div className="flex items-center space-x-1">
+                  {getPageNumbers().map((pageNum, index) => (
+                    <div key={index}>
+                      {pageNum === '...' ? (
+                        <span className="px-3 py-1 text-sm text-muted-foreground">...</span>
+                      ) : (
+                        <Button
+                          variant={page === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageJump(pageNum as number)}
+                          disabled={isLoading}
+                          className="min-w-[40px]"
+                        >
+                          {pageNum}
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Next Page */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((old) => Math.min(old + 1, totalPages))}
+                  disabled={page === totalPages || isLoading}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="sr-only">Next Page</span>
+                </Button>
+                
+                {/* Last Page */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(totalPages)}
+                  disabled={page === totalPages || isLoading}
+                >
+                  <ChevronLast className="h-4 w-4" />
+                  <span className="sr-only">Last Page</span>
+                </Button>
+              </div>
+              
+              {/* Jump to Page */}
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">Go to page</span>
+                <Input
+                  type="number"
+                  min="1"
+                  max={totalPages}
+                  value={page}
+                  onChange={(e) => {
+                    const pageNum = parseInt(e.target.value);
+                    if (!isNaN(pageNum)) {
+                      handlePageJump(pageNum);
+                    }
+                  }}
+                  className="w-16 h-8 text-center"
+                  disabled={isLoading}
+                />
+              </div>
             </div>
           )}
         </div>

@@ -34,7 +34,7 @@ class EnhancedDetectionResponse(BaseModel):
     attack_type_predictions: List[int] = Field(..., description="Attack type predictions (only for anomalies)")
     attack_confidences: List[float] = Field(..., description="Attack type confidences")
     threshold: float = Field(..., description="Threshold used for detection")
-    attack_types: List[str] = Field(default=["BENIGN", "DoS GoldenEye", "DoS Hulk", "DoS Slowhttptest", "DoS slowloris"], description="Available attack types")
+    attack_types: List[str] = Field(default=["Botnet", "DoS", "Infiltration", "Other", "PortScan"], description="Available attack types")
 
 
 class ModelInfo(BaseModel):
@@ -94,6 +94,39 @@ class AnomalyData(BaseModel):
     anomalyScore: Optional[float] = None
     attackTypeId: Optional[int] = None
     attackConfidence: Optional[float] = None
+    attackType: Optional[Dict[str, Any]] = None  # Frontend expects object with id, name, etc.
+    attack_types: List[str] = Field(default=["Botnet", "DoS", "Infiltration", "Other", "PortScan"], description="Available attack types")
+    attack_type_colors: List[str] = Field(default=["#8b5cf6", "#ef4444", "#dc2626", "#eab308", "#f59e0b"], description="Attack type colors")
+    
+    def __init__(self, **data):
+        super().__init__(**data)
+        # Convert attackTypeId to attackType object for frontend
+        if self.attackTypeId is not None:
+            if self.attackTypeId == -1:
+                # -1 = Normal/No Attack
+                self.attackType = {
+                    "id": -1,
+                    "name": "Normal",
+                    "description": "Normal network traffic",
+                    "severity": "low",
+                    "color": "#10b981"
+                }
+            elif self.attackTypeId < len(self.attack_types):
+                self.attackType = {
+                    "id": self.attackTypeId,
+                    "name": self.attack_types[self.attackTypeId],
+                    "description": f"Attack type: {self.attack_types[self.attackTypeId]}",
+                    "severity": self.severity,  # Use the anomaly's severity
+                    "color": self.attack_type_colors[self.attackTypeId] if self.attackTypeId < len(self.attack_type_colors) else "#6b7280"
+                }
+            else:
+                self.attackType = {
+                    "id": self.attackTypeId,
+                    "name": "Unknown",
+                    "description": "Unknown attack type",
+                    "severity": self.severity,
+                    "color": "#6b7280"
+                }
 
 
 class LogData(BaseModel):

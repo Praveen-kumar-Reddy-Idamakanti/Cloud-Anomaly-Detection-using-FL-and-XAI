@@ -41,12 +41,12 @@ class PathConfig:
     
     def get_attack_types(self) -> list:
         """Get attack types from environment."""
-        attack_types_str = os.getenv("ATTACK_TYPES", '["BENIGN", "DoS GoldenEye", "DoS Hulk", "DoS Slowhttptest", "DoS slowloris"]')
+        attack_types_str = os.getenv("ATTACK_TYPES", '["Botnet", "DoS", "Infiltration", "Other", "PortScan"]')
         try:
             import ast
             return ast.literal_eval(attack_types_str)
         except:
-            return ["BENIGN", "DoS GoldenEye", "DoS Hulk", "DoS Slowhttptest", "DoS slowloris"]
+            return ["Botnet", "DoS", "Infiltration", "Other", "PortScan"]
     
     def get_anomaly_threshold(self) -> float:
         """Get anomaly threshold from environment."""
@@ -168,12 +168,12 @@ class PathConfig:
     
     def get_attack_types(self) -> list:
         """Get attack types from environment."""
-        attack_types_str = os.getenv("ATTACK_TYPES", '["BENIGN", "DoS GoldenEye", "DoS Hulk", "DoS Slowhttptest", "DoS slowloris"]')
+        attack_types_str = os.getenv("ATTACK_TYPES", '["Botnet", "DoS", "Infiltration", "Other", "PortScan"]')
         try:
             import ast
             return ast.literal_eval(attack_types_str)
         except:
-            return ["BENIGN", "DoS GoldenEye", "DoS Hulk", "DoS Slowhttptest", "DoS slowloris"]
+            return ["Botnet", "DoS", "Infiltration", "Other", "PortScan"]
     
     def get_anomaly_threshold(self) -> float:
         """Get anomaly threshold from environment."""

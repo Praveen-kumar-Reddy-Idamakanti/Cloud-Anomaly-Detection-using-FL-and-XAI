@@ -432,7 +432,7 @@ def calculate_two_stage_classification_metrics():
             logger.info("   End-to-End: N/A")
         logger.info("=" * 60)
         
-        return True
+        return results
         
     except Exception as e:
         logger.error(f"❌ Two-stage metrics calculation failed: {e}")
@@ -479,7 +479,43 @@ def calculate_single_stage_metrics():
         logger.info(f"     True Normal: {cm[0][0]}, False Anomaly: {cm[0][1]}")
         logger.info(f"     False Normal: {cm[1][0]}, True Anomaly: {cm[1][1]}")
         
-        return True
+        # Return compatible structure for single-stage metrics
+        single_stage_results = {
+            'two_stage_enabled': False,
+            'stage1_anomaly_detection': {
+                'accuracy': existing_metrics['best_metrics']['accuracy'],
+                'recall': existing_metrics['best_metrics']['recall'],
+                'precision': existing_metrics['best_metrics']['precision'],
+                'f1_score': existing_metrics['best_metrics']['f1_score'],
+                'roc_auc': existing_metrics['best_metrics']['roc_auc'],
+                'confusion_matrix': existing_metrics['best_metrics']['confusion_matrix']
+            },
+            'stage2_attack_category_classification': {
+                'oracle_true_anomalies': {
+                    'accuracy': 0.0,  # Not available in single-stage
+                    'f1_macro': 0.0
+                }
+            },
+            'end_to_end_detected_samples': {
+                'f1_macro': existing_metrics['best_metrics']['f1_score']
+            },
+            'dataset_info': {
+                'total_samples': 0,  # Not available in existing metrics
+                'normal_samples': 0,
+                'anomaly_samples': 0,
+                'detected_anomalies': 0,
+                'attack_classifications': 0,
+            },
+            'model_info': {
+                'autoencoder_params': 0,
+                'attack_classifier_params': 0,
+                'total_params': 0,
+                'attack_categories': ['Normal', 'Anomaly'],
+            },
+            'single_stage_mode': True
+        }
+        
+        return single_stage_results
         
     except Exception as e:
         logger.error(f"❌ Single-stage metrics calculation failed: {e}")
@@ -487,11 +523,26 @@ def calculate_single_stage_metrics():
 
 
 if __name__ == "__main__":
-    success = calculate_two_stage_classification_metrics()
+    metrics = calculate_two_stage_classification_metrics()
     
-    if success:
+    if metrics and isinstance(metrics, dict):
         logger.info("🎉 ENHANCED Two-Stage classification metrics calculated successfully!")
         logger.info(f"✅ Check {ARTIFACTS_DIR / 'two_stage_classification_metrics.json'} for detailed results")
         logger.info(f"✅ Check {ARTIFACTS_DIR / 'two_stage_classification_metrics.png'} for visualizations")
+        
+        # Print summary of key metrics
+        if 'stage1_anomaly_detection' in metrics:
+            stage1 = metrics['stage1_anomaly_detection']
+            logger.info(f"📊 Stage-1 Anomaly Detection - Recall: {stage1.get('recall', 0):.4f}")
+        
+        if 'stage2_attack_category_classification' in metrics:
+            stage2 = metrics['stage2_attack_category_classification']
+            if 'oracle_true_anomalies' in stage2:
+                oracle = stage2['oracle_true_anomalies']
+                logger.info(f"🎯 Stage-2 Oracle Accuracy: {oracle.get('accuracy', 0):.4f}")
+                
+        if 'end_to_end_detected_samples' in metrics:
+            e2e = metrics['end_to_end_detected_samples']
+            logger.info(f"🔄 End-to-End F1 (macro): {e2e.get('f1_macro', 0):.4f}")
     else:
         logger.error("❌ Two-stage metrics calculation failed")

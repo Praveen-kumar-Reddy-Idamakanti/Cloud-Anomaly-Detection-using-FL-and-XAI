@@ -20,7 +20,8 @@ import {
   Lightbulb, 
   ShieldCheck, 
   Info, 
-  Construction 
+  Construction,
+  Target 
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 

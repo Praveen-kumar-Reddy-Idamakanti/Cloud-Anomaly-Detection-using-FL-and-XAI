@@ -1,5 +1,5 @@
 {
-  "input_dim": 81,
+  "input_dim": 79,
   "encoding_dims": [
     64,
     32,
@@ -11,10 +11,14 @@
   "learning_rate": 0.001,
   "batch_size": 128,
   "epochs": 100,
+  "training_epochs": 50,
   "patience": 10,
   "min_delta": 1e-06,
   "test_size": 0.2,
   "validation_split": 0.2,
   "random_state": 42,
-  "anomaly_threshold_percentile": 95
+  "anomaly_threshold_percentile": 95,
+  "device": "auto",
+  "seeds": [42, 123, 999, 2024, 777],
+  "quick_test_seeds": [42]
 }

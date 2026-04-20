@@ -216,7 +216,7 @@ if __name__ == "__main__":
         GUNICORN_AVAILABLE = False
     
     # Get port from environment variable (required for Render)
-    port = int(os.getenv("PORT", 8000))
+    port = int(os.getenv("PORT", 8010))
     host = "0.0.0.0"
     
     # Use gunicorn in production if available, uvicorn otherwise

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { BookOpen, AlertTriangle, ArrowRight, Clock, CheckCircle2 } from 'lucide-react';
 import Navbar from '../components/Layout/Navbar';
 import Sidebar from '../components/Layout/Sidebar';
+import AttackTypeBadge from '../components/AttackTypeBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -135,6 +136,13 @@ const XAI: React.FC = () => {
                               <Badge className={getSeverityColor(anomaly.severity)} variant="outline">
                                 {anomaly.severity.charAt(0).toUpperCase() + anomaly.severity.slice(1)}
                               </Badge>
+                              {anomaly.attackType && (
+                                <AttackTypeBadge 
+                                  attackType={anomaly.attackType} 
+                                  confidence={anomaly.attackConfidence} 
+                                  size="sm"
+                                />
+                              )}
                               <span className="text-sm text-muted-foreground">
                                 {anomaly.sourceIp} → {anomaly.destinationIp}
                               </span>

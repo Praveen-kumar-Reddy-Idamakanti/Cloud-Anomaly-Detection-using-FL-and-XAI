@@ -34,17 +34,61 @@ class DatabaseService:
         self.sqlite_db: Optional[SQLiteSetup] = None
         self._initialize_client()
     
+    def _is_supabase_connection_error(self, exc: Exception) -> bool:
+        """Check if exception is a Supabase connection / DNS error."""
+        if exc is None:
+            return False
+
+        msg = str(exc).lower()
+        if "getaddrinfo failed" in msg or "connection refused" in msg or "connecterror" in msg:
+            return True
+
+        try:
+            import httpx
+            if isinstance(exc, httpx.ConnectError):
+                return True
+        except Exception:
+            pass
+
+        try:
+            import httpcore
+            if isinstance(exc, httpcore.ConnectError):
+                return True
+        except Exception:
+            pass
+
+        return False
+
+    def _switch_to_sqlite(self, reason: str):
+        """Switch internal service to local SQLite fallback."""
+        logger.warning(f"Supabase unavailable, switching to SQLite fallback: {reason}")
+        self.supabase = None
+        if self.sqlite_db is None:
+            self.sqlite_db = SQLiteSetup()
+
     def _initialize_client(self):
         """Initialize the database client."""
-        if not SUPABASE_AVAILABLE:
-            logger.warning("Supabase not available - using SQLite database")
+        use_backend = os.getenv("DB_BACKEND", "supabase").strip().lower()
+        force_sqlite = use_backend == "sqlite" or os.getenv("USE_SQLITE", "false").strip().lower() in ["1", "true", "yes"]
+
+        if force_sqlite or not SUPABASE_AVAILABLE:
+            logger.warning("Supabase disabled or unavailable - using SQLite database")
+            self.supabase = None
             self.sqlite_db = SQLiteSetup()
             return
-        
+
         try:
             self.supabase = get_supabase_client()
+            # quick test call to verify connectivity and configuration
+            try:
+                self.supabase.table("anomalies").select("id").limit(1).execute()
+            except Exception as test_exc:
+                if self._is_supabase_connection_error(test_exc):
+                    raise ConnectionError(test_exc)
+                raise
+
             logger.info("Supabase client initialized successfully.")
-        except ValueError as e:
+        except Exception as e:
             logger.warning(f"Failed to initialize Supabase client: {e}. Falling back to SQLite.")
             self.supabase = None
             self.sqlite_db = SQLiteSetup()
@@ -165,8 +209,11 @@ class DatabaseService:
             }
             
         except Exception as e:
-            logger.error(f"Failed to get stats: {e}")
+            logger.error(f"Failed to get stats from Supabase: {e}")
             traceback.print_exc()
+            if self._is_supabase_connection_error(e):
+                self._switch_to_sqlite(str(e))
+                return self.get_system_stats()
             raise ValueError("Failed to retrieve system statistics.")
     
     def get_training_history(self) -> List[Dict[str, Any]]:
@@ -222,8 +269,11 @@ class DatabaseService:
             return response.data if response.data is not None else []
             
         except Exception as e:
-            logger.error(f"Failed to get training history: {e}")
+            logger.error(f"Failed to get training history from Supabase: {e}")
             traceback.print_exc()
+            if self._is_supabase_connection_error(e):
+                self._switch_to_sqlite(str(e))
+                return self.get_training_history()
             raise ValueError("Failed to retrieve training history.")
     
     def get_anomalies(self, page: int = 1, limit: int = 10) -> List[Dict[str, Any]]:
@@ -293,8 +343,12 @@ class DatabaseService:
             return response.data if response.data is not None else []
             
         except Exception as e:
-            logger.error(f"Failed to get anomalies: {e}")
+            logger.error(f"Failed to get anomalies from Supabase: {e}")
             traceback.print_exc()
+            if self._is_supabase_connection_error(e):
+                self._switch_to_sqlite(str(e))
+                # Retry with local SQLite backend
+                return self.get_anomalies(page, limit)
             raise ValueError("Failed to retrieve anomalies.")
     
     def get_anomaly_by_id(self, anomaly_id: str) -> Dict[str, Any]:
@@ -363,8 +417,11 @@ class DatabaseService:
             return response.data
             
         except Exception as e:
-            logger.error(f"Failed to get anomaly {anomaly_id}: {e}")
+            logger.error(f"Failed to get anomaly {anomaly_id} from Supabase: {e}")
             traceback.print_exc()
+            if self._is_supabase_connection_error(e):
+                self._switch_to_sqlite(str(e))
+                return self.get_anomaly_by_id(anomaly_id)
             raise ValueError("Failed to retrieve anomaly.")
     
     def review_anomaly(self, anomaly_id: str, reviewed: bool) -> Dict[str, str]:
@@ -394,8 +451,11 @@ class DatabaseService:
             return {"message": f"Anomaly {anomaly_id} marked as {'reviewed' if reviewed else 'unreviewed'}"}
             
         except Exception as e:
-            logger.error(f"Failed to review anomaly {anomaly_id}: {e}")
+            logger.error(f"Failed to review anomaly {anomaly_id} in Supabase: {e}")
             traceback.print_exc()
+            if self._is_supabase_connection_error(e):
+                self._switch_to_sqlite(str(e))
+                return self.review_anomaly(anomaly_id, reviewed)
             raise ValueError("Failed to update anomaly review status.")
     
     def report_anomaly(self, anomaly_data: Dict[str, Any]) -> Dict[str, str]:
@@ -424,8 +484,11 @@ class DatabaseService:
             return {"message": "Anomaly reported successfully", "anomaly_id": response.data[0]['id']}
             
         except Exception as e:
-            logger.error(f"Failed to report anomaly: {e}")
+            logger.error(f"Failed to report anomaly to Supabase: {e}")
             traceback.print_exc()
+            if self._is_supabase_connection_error(e):
+                self._switch_to_sqlite(str(e))
+                return self.report_anomaly(anomaly_data)
             raise ValueError("Failed to report anomaly.")
 
 

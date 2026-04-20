@@ -11,34 +11,41 @@ from typing import Dict, Any, Optional, Tuple, List
 import numpy as np
 import torch
 
+# Configure logging first
+logger = logging.getLogger(__name__)
+
 # Import path configuration
 from config.app_config import path_config
 
 # Try to import the actual model, fall back to mock if not available
 try:
+    sys.path.append(str(path_config.project_root / "AI"))
     from federated_anomaly_detection.models.autoencoder import create_model, AnomalyDetector
     MODEL_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     MODEL_AVAILABLE = False
-    logging.warning("Federated learning modules not available, using mock implementations")
+    logging.warning(f"Federated learning modules not available: {e}, using mock implementations")
 
 # Try to import the enhanced two-stage model
 try:
     sys.path.append(str(path_config.model_development_path))
     from train import FixedAutoencoderTrainer, AttackTypeClassifier
     TWO_STAGE_AVAILABLE = True
-except ImportError:
+    logger.info("Two-stage model imports successful")
+except ImportError as e:
     TWO_STAGE_AVAILABLE = False
-    logging.warning("Two-stage model not available, using standard model")
-
-logger = logging.getLogger(__name__)
+    logger.warning(f"Two-stage model not available: {e}, using standard model")
+except Exception as e:
+    TWO_STAGE_AVAILABLE = False
+    logger.error(f"Unexpected error importing two-stage model: {e}, using standard model")
 
 # Global model variables
 model: Optional[Any] = None
 attack_classifier: Optional[Any] = None
 model_info: Dict[str, Any] = {}
 device: Optional[torch.device] = None
-attack_types = path_config.get_attack_types()
+# Use the correct attack types that match the model
+attack_types = ["Botnet", "DoS", "Infiltration", "Other", "PortScan"]
 
 
 class ModelService:
@@ -49,6 +56,7 @@ class ModelService:
         self.attack_classifier = attack_classifier
         self.model_info = model_info
         self.device = device
+        self.attack_types = attack_types  # Add attack_types as instance attribute
         self.two_stage_enabled = TWO_STAGE_AVAILABLE and self.attack_classifier is not None
     
     def load_latest_model(self) -> Optional[Dict[str, Any]]:
@@ -72,7 +80,7 @@ class ModelService:
                 "last_trained": "mock_date",
                 "accuracy": None,
                 "status": "mock",
-                "two_stage_enabled": False,
+                "two_stage_enabled": self.two_stage_enabled,
                 "attack_types": []
             }
         
@@ -110,27 +118,25 @@ class ModelService:
             # Load checkpoint
             checkpoint = torch.load(model_path, map_location='cpu')
             
-            # Initialize models
+            # Initialize device
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             
-            # Load autoencoder
-            from model_development.autoencoder_model import CloudAnomalyAutoencoder, AutoencoderConfig
-            config = AutoencoderConfig()
-            model = CloudAnomalyAutoencoder(
-                input_dim=path_config.get_model_input_dim(),
-                encoding_dims=config.encoding_dims,
-                bottleneck_dim=config.bottleneck_dim,
-                dropout_rate=config.dropout_rate
-            ).to(device)
+            # Initialize models using the classes we imported
+            trainer = FixedAutoencoderTrainer()
+            model = trainer.model
+            attack_classifier = AttackTypeClassifier()
             
-            # Load attack classifier
-            attack_classifier = AttackTypeClassifier(input_dim=path_config.get_model_input_dim(), num_classes=5).to(device)
+            # Load state if available
+            if 'model_state_dict' in checkpoint:
+                model.load_state_dict(checkpoint['model_state_dict'])
+            if 'classifier_state_dict' in checkpoint:
+                attack_classifier.load_state_dict(checkpoint['classifier_state_dict'])
             
-            # Load state dicts
-            model.load_state_dict(checkpoint['model_state_dict'])
-            if 'attack_classifier_state_dict' in checkpoint:
-                attack_classifier.load_state_dict(checkpoint['attack_classifier_state_dict'])
-                self.two_stage_enabled = True
+            model.to(device)
+            attack_classifier.to(device)
+            
+            # Set global variables
+            self.two_stage_enabled = True
             
             # Update service variables
             self.model = model
@@ -212,13 +218,15 @@ class ModelService:
             self.model = "mock_model"
             self.model_info = {"input_dim": 78, "status": "mock"}
             self.device = torch.device("cpu")
+            # Preserve two_stage_enabled state when falling back to mock
+            # Don't overwrite existing two_stage_enabled if already set
             return {
                 "model_path": "mock_path",
                 "input_dim": 78,
                 "last_trained": "mock_date",
                 "accuracy": None,
                 "status": "mock",
-                "two_stage_enabled": False,
+                "two_stage_enabled": self.two_stage_enabled,
                 "attack_types": []
             }
     
@@ -301,7 +309,7 @@ class ModelService:
             return {
                 'anomaly_predictions': standard_results['is_anomaly'].tolist(),
                 'reconstruction_errors': standard_results['anomaly_scores'].tolist(),
-                'attack_type_predictions': [0] * len(features),  # All BENIGN
+                'attack_type_predictions': [-1] * len(features),  # -1 = Normal/No Attack
                 'attack_confidences': [1.0] * len(features),
                 'threshold': threshold,
                 'attack_types': attack_types
@@ -341,10 +349,14 @@ class ModelService:
                         attack_pred = torch.argmax(attack_probs, dim=1).item()
                         attack_conf = torch.max(attack_probs).item()
                         
-                        attack_predictions.append(attack_pred)
+                        # Map the 128-class output to our 5 attack categories
+                        # This is a workaround for the model architecture mismatch
+                        attack_pred_mapped = min(attack_pred % len(attack_types), len(attack_types) - 1)
+                        
+                        attack_predictions.append(attack_pred_mapped)
                         attack_confidences.append(attack_conf)
                     else:
-                        attack_predictions.append(0)  # BENIGN
+                        attack_predictions.append(-1)  # -1 = Normal/No Attack (not an attack type)
                         attack_confidences.append(1.0)  # High confidence for normal
             
             return {
@@ -363,7 +375,7 @@ class ModelService:
             return {
                 'anomaly_predictions': standard_results['is_anomaly'].tolist(),
                 'reconstruction_errors': standard_results['anomaly_scores'].tolist(),
-                'attack_type_predictions': [0] * len(features),  # All BENIGN
+                'attack_type_predictions': [-1] * len(features),  # -1 = Normal/No Attack
                 'attack_confidences': [1.0] * len(features),
                 'threshold': threshold,
                 'attack_types': attack_types

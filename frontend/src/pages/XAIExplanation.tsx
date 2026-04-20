@@ -6,11 +6,13 @@ import { toast } from 'sonner';
 import Navbar from '../components/Layout/Navbar';
 import Sidebar from '../components/Layout/Sidebar';
 import ExplanationView from '../components/XAI/ExplanationView';
+import AttackTypeBadge from '../components/AttackTypeBadge';
+import TwoStagePanel from '../components/TwoStagePanel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { anomaliesApi, explanationsApi, AnomalyData, ExplanationData } from '../api/api';
+import { anomaliesApi, explanationsApi, AnomalyData, ExplanationData, TwoStageDetectionResult, getAttackTypeInfo } from '../api/api';
 
 const XAIExplanation: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +36,10 @@ const XAIExplanation: React.FC = () => {
         console.log('=== FETCHING ANOMALY DETAILS ===');
         const anomalyData = await anomaliesApi.getAnomalyById(id);
         console.log('Anomaly data received:', anomalyData);
+        console.log('anomalyData.anomalyScore:', anomalyData.anomalyScore);
+        console.log('anomalyData.reconstructionError:', anomalyData.reconstructionError);
+        console.log('anomalyData.attackType:', anomalyData.attackType);
+        console.log('anomalyData.attackConfidence:', anomalyData.attackConfidence);
         setAnomaly(anomalyData);
         
         // Extract features from anomaly details
@@ -63,21 +69,34 @@ const XAIExplanation: React.FC = () => {
         console.log('Features length:', features.length);
         console.log('Features sample:', features.slice(0, 5));
 
-        // Fetch explanation using the new API
+        // Use mock explanations directly
         try {
-          const explanationData = await explanationsApi.getAnomalyExplanation(features);
-          console.log('=== EXPLANATION DATA RECEIVED ===');
-          console.log('Explanation data:', explanationData);
-          console.log('Feature importances count:', explanationData.feature_importances?.length || 0);
-          console.log('Model type:', explanationData.model_type);
-          console.log('Explanation type:', explanationData.explanation_type);
-          setExplanation(explanationData);
-        } catch (error: any) {
-          console.error("=== EXPLANATION API ERROR ===");
-          console.error("Failed to fetch explanation:", error);
-          console.error("Error message:", error.message);
-          console.error("Error details:", error.details);
-          setExplanation(null);
+          const { getMockAnomalyById } = await import('../data/mockAnomalyExplanations');
+          const mockData = getMockAnomalyById(id || '');
+          if (mockData) {
+            console.log("=== USING MOCK EXPLANATION DATA ===");
+            console.log('Mock explanation data:', mockData.explanation);
+            console.log('Mock attack type:', mockData.explanation.phase3?.attack_name);
+            console.log('Mock confidence:', mockData.explanation.phase3?.confidence);
+            setExplanation(mockData.explanation);
+          } else {
+            console.log("=== NO MOCK DATA FOUND, FALLING BACK TO API ===");
+            // Fallback to real API if no mock data found
+            const explanationData = await explanationsApi.getAnomalyExplanation(features);
+            console.log('=== EXPLANATION DATA RECEIVED ===');
+            console.log('Explanation data:', explanationData);
+            setExplanation(explanationData);
+          }
+        } catch (mockError) {
+          console.error("Failed to load mock explanation, falling back to API:", mockError);
+          // Final fallback to real API
+          try {
+            const explanationData = await explanationsApi.getAnomalyExplanation(features);
+            setExplanation(explanationData);
+          } catch (apiError) {
+            console.error("API also failed:", apiError);
+            setExplanation(null);
+          }
         }
       } catch (error: any) {
         console.error('=== ANOMALY FETCH ERROR ===');
@@ -127,6 +146,23 @@ const XAIExplanation: React.FC = () => {
       toast.error(error.message || 'Failed to update anomaly status');
     }
   };
+
+  const anomalyResultForPanel = anomaly && explanation ? {
+    id: anomaly.id,
+    timestamp: new Date(anomaly.timestamp),
+    features: anomaly.features ? JSON.parse(anomaly.features) : [],
+    isAnomaly: explanation.anomaly_detected ?? (anomaly.severity !== 'low'),
+    anomalyScore: explanation.reconstruction_error ?? anomaly.anomalyScore ?? 0,
+    threshold: 0.22610116, // Default threshold
+    reconstructionError: explanation.reconstruction_error ?? anomaly.reconstructionError,
+    attackType: anomaly.attackType || (explanation.phase3?.attack_type !== undefined && explanation.phase3?.attack_type !== null ? getAttackTypeInfo(explanation.phase3.attack_type) : undefined),
+    attackConfidence: explanation.phase3?.confidence ?? anomaly.attackConfidence,
+    confidence: anomaly.confidence
+  } : null;
+
+  console.log('anomalyResultForPanel before passing to TwoStagePanel:', anomalyResultForPanel);
+  console.log('anomaly.attackType:', anomaly?.attackType);
+  console.log('explanation.phase3?.attack_type:', explanation?.phase3?.attack_type);
 
   return (
     <div className="min-h-screen">
@@ -258,6 +294,17 @@ const XAIExplanation: React.FC = () => {
                       <h3 className="text-sm font-medium">Details</h3>
                       <p>{anomaly.details}</p>
                       
+                      {/* Attack Type Information */}
+                      {anomaly.attackType && (
+                        <div className="mt-3">
+                          <p className="text-sm text-muted-foreground">Attack Type</p>
+                          <AttackTypeBadge 
+                            attackType={anomaly.attackType} 
+                            confidence={anomaly.attackConfidence} 
+                          />
+                        </div>
+                      )}
+                      
                       {explanation && (
                         <div>
                           <p className="text-sm text-muted-foreground">Model Type</p>
@@ -268,6 +315,11 @@ const XAIExplanation: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
+              
+              {/* Two-Stage Detection Panel */}
+              {anomaly && anomalyResultForPanel && (
+                <TwoStagePanel anomalyResult={anomalyResultForPanel} />
+              )}
               
               {/* XAI Explanation */}
               <ExplanationView explanation={explanation} />

@@ -51,14 +51,14 @@ const AnomalyChart: React.FC<AnomalyChartProps> = ({
               </defs>
               <XAxis 
                 dataKey="date" 
-                tick={{ fill: 'var(--muted-foreground)' }}
-                axisLine={{ stroke: 'var(--border)' }}
-                tickLine={{ stroke: 'var(--border)' }}
+                tick={{ fill: '#ffffff' }}
+                axisLine={{ stroke: '#374151' }}
+                tickLine={{ stroke: '#374151' }}
               />
               <YAxis 
-                tick={{ fill: 'var(--muted-foreground)' }}
-                axisLine={{ stroke: 'var(--border)' }}
-                tickLine={{ stroke: 'var(--border)' }}
+                tick={{ fill: '#ffffff' }}
+                axisLine={{ stroke: '#374151' }}
+                tickLine={{ stroke: '#374151' }}
               />
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <Tooltip 
@@ -75,7 +75,7 @@ const AnomalyChart: React.FC<AnomalyChartProps> = ({
                 stroke="#8884d8" 
                 fillOpacity={1} 
                 fill="url(#colorLogs)" 
-                name="Server Round" // Updated name
+                name="Network Activity" 
               />
               <Area 
                 type="monotone" 
@@ -83,21 +83,21 @@ const AnomalyChart: React.FC<AnomalyChartProps> = ({
                 stroke="#ff4557" 
                 fillOpacity={1} 
                 fill="url(#colorAnomalies)" 
-                name="Average Loss" // Updated name
+                name="Anomalies Detected" 
               />
             </AreaChart>
           ) : (
             <BarChart data={data}>
               <XAxis 
                 dataKey="date" 
-                tick={{ fill: 'var(--muted-foreground)' }}
-                axisLine={{ stroke: 'var(--border)' }}
-                tickLine={{ stroke: 'var(--border)' }}
+                tick={{ fill: '#ffffff' }}
+                axisLine={{ stroke: '#374151' }}
+                tickLine={{ stroke: '#374151' }}
               />
               <YAxis 
-                tick={{ fill: 'var(--muted-foreground)' }}
-                axisLine={{ stroke: 'var(--border)' }}
-                tickLine={{ stroke: 'var(--border)' }}
+                tick={{ fill: '#ffffff' }}
+                axisLine={{ stroke: '#374151' }}
+                tickLine={{ stroke: '#374151' }}
               />
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <Tooltip 
@@ -109,8 +109,8 @@ const AnomalyChart: React.FC<AnomalyChartProps> = ({
                 labelStyle={{ color: 'var(--card-foreground)' }}
               />
               <Legend />
-              <Bar dataKey="logs" fill="#8884d8" name="Server Round" /> // Updated name
-              <Bar dataKey="anomalies" fill="#ff4557" name="Average Loss" /> // Updated name
+              <Bar dataKey="logs" fill="#8884d8" name="Network Activity" />
+              <Bar dataKey="anomalies" fill="#ff4557" name="Anomalies Detected" />
             </BarChart>
           )}
         </ResponsiveContainer>

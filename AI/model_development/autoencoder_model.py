@@ -180,7 +180,47 @@ class CloudAnomalyAutoencoder(nn.Module):
 class AutoencoderConfig:
     """Configuration class for autoencoder training"""
     
-    def __init__(self, input_dim=79):
+    def __init__(self, input_dim=79, config_file=None):
+        # Default configuration path
+        if config_file is None:
+            config_file = Path(__file__).parent.parent / "model_artifacts" / "architecture_config.json"
+        
+        # Load configuration from JSON file if it exists
+        if Path(config_file).exists():
+            self.load_from_json(config_file)
+            # Override input_dim if provided (for flexibility)
+            if input_dim != 79:
+                self.input_dim = input_dim
+        else:
+            # Fallback to hardcoded defaults if config file doesn't exist
+            self.set_default_config(input_dim)
+        
+        # Add training-specific parameters that might not be in JSON
+        self.training_epochs = getattr(self, 'training_epochs', 5)  # Default to 5 for quick testing
+        self.patience = getattr(self, 'patience', 10)
+        self.min_delta = getattr(self, 'min_delta', 1e-6)
+        
+    def load_from_json(self, config_file):
+        """Load configuration from JSON file"""
+        import json
+        
+        try:
+            with open(config_file, 'r') as f:
+                config_data = json.load(f)
+            
+            # Set all attributes from JSON
+            for key, value in config_data.items():
+                setattr(self, key, value)
+                
+            print(f"✅ Configuration loaded from {config_file}")
+            
+        except Exception as e:
+            print(f"⚠️ Failed to load config from {config_file}: {e}")
+            print("🔄 Using default configuration...")
+            self.set_default_config(79)
+    
+    def set_default_config(self, input_dim):
+        """Set default configuration values"""
         # Model architecture
         self.input_dim = input_dim  # 79 features from processed data
         self.encoding_dims = [64, 32, 16, 8]
@@ -191,7 +231,7 @@ class AutoencoderConfig:
         self.learning_rate = 0.001
         self.batch_size = 128
         self.epochs = 100
-        self.training_epochs = 50  # 🎬 SHOWCASE: Increased from 20 to 50 for better results
+        self.training_epochs = 5  # TEMP: Reduced from 50 to 5 for quick testing after fix
         self.patience = 10  # Early stopping patience
         self.min_delta = 1e-6  # Minimum improvement for early stopping
         

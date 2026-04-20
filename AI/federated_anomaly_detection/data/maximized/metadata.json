@@ -1,0 +1,18 @@
+{
+  "total_clients": 8,
+  "total_samples": 1622672,
+  "total_anomalies": 447997,
+  "overall_anomaly_rate": 27.608598657029887,
+  "validation_split": 0.2,
+  "source_files": [
+    "processed_Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
+    "processed_Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv",
+    "processed_Friday-WorkingHours-Morning.pcap_ISCX.csv",
+    "processed_Monday-WorkingHours.pcap_ISCX.csv",
+    "processed_Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv",
+    "processed_Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv",
+    "processed_Tuesday-WorkingHours.pcap_ISCX.csv",
+    "processed_Wednesday-workingHours.pcap_ISCX.csv"
+  ],
+  "creation_date": "2026-02-03T22:41:12.008920"
+}

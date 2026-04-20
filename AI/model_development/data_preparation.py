@@ -187,6 +187,7 @@ class DataPreparation:
             self.attack_category_encoder.fit(anomaly_categories)
             self.attack_category_classes = list(self.attack_category_encoder.classes_)
             logger.info(f"Attack categories (anomaly-only): {len(self.attack_category_classes)}")
+            logger.info(f"  Attack category classes: {self.attack_category_classes}") # Add this line
 
         return self.all_data
     

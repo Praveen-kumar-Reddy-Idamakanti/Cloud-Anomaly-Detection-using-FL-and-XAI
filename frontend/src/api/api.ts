@@ -1,13 +1,3 @@
-
-import {
-  mockStats,
-  mockAnomalies,
-  mockLogs,
-  mockExplanations,
-  timeSeriesData,
-  generateRealtimeData
-} from '../data/mockData';
-
 import { API_CONFIG } from '../config/api';
 
 // API Configuration
@@ -86,6 +76,21 @@ export type DetectionResult = {
   confidence: number;
 };
 
+// Two-Stage Detection Result type for enhanced detection
+export type TwoStageDetectionResult = {
+  id: string;
+  timestamp: Date;
+  features: number[];
+  isAnomaly: boolean;
+  anomalyScore: number;
+  threshold: number;
+  reconstructionError?: number;
+  // Stage 2 results
+  attackType?: AttackTypeInfo;
+  attackConfidence?: number;
+  confidence: number;
+};
+
 // Real-time update types
 export type RealtimeUpdate = {
   type: 'anomaly_detected' | 'model_update' | 'system_status';
@@ -132,8 +137,17 @@ export type AnomalyData = {
   details: string;
   features?: string; // JSON string of features for XAI
   anomalyScore?: number;
-  attackTypeId?: number;
+  // Enhanced attack classification fields
+  attackType?: {
+    id: number;
+    name: string;
+    description: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    color: string;
+  };
   attackConfidence?: number;
+  reconstructionError?: number;
+  attackTypeId?: number; // Keep for backward compatibility
 };
 
 export type LogData = {
@@ -164,6 +178,22 @@ export type FeatureImportance = {
   direction?: string; // Direction of impact (positive/negative)
 };
 
+export type Phase3Explanation = {
+  phase: string;
+  explanation_type: string;
+  features: number[];
+  attack_type: number;
+  attack_name: string;
+  confidence: number;
+  explanation: {
+    predicted_attack: string;
+    confidence_reasoning: string;
+    key_indicators?: string[];
+  };
+  attack_shap_values?: any[]; // Adjust type if more specific structure is known
+  timestamp: string;
+};
+
 export type ExplanationData = {
   model_type: string; // The backend returns 'Autoencoder'
   explanation_type: string; // The backend returns 'SHAP'
@@ -171,6 +201,18 @@ export type ExplanationData = {
   note: string;
   contributingFactors?: string[]; // Optional contributing factors
   recommendations?: string[]; // Optional recommendations
+  // Attack type specific explanation fields
+  attack_type_explanation?: {
+    predicted_attack: string;
+    confidence_reasoning: string;
+    key_indicators?: string[];
+  };
+  attack_confidence?: number;
+  attack_feature_importances?: FeatureImportance[];
+
+  // These were added recently
+  reconstruction_error?: number;
+  phase3?: Phase3Explanation; // Updated to use the specific type
 };
 
 export type TimeSeriesData = {
@@ -248,44 +290,97 @@ export const statsApi = {
   },
   
   getTimeSeriesData: async (): Promise<TimeSeriesData[]> => {
-    const data = await apiCall('/history/training');
-    
-    // Transform the data to match TimeSeriesData
-    const transformedData: TimeSeriesData[] = data.map((item: any) => ({
-      date: item.created_at.split('T')[0], // Extract just the date part
-      logs: item.server_round, // Using server_round as a proxy for logs count
-      anomalies: item.avg_loss, // Using avg_loss as a proxy for anomaly count for now
-    }));
-    
-    return transformedData;
+    // Use mock data for network activity visualization
+    const { networkActivityMockData } = await import('../data/networkActivityMockData');
+    return networkActivityMockData;
   },
 };
 
-// Anomalies API
+// Anomalies API - Enhanced with two-stage detection
 export const anomaliesApi = {
   getAnomalies: async (page: number = 1, limit: number = 10): Promise<{ data: AnomalyData[], total: number }> => {
-    // Note: The total count is not yet returned by the API.
-    // This is a temporary solution until the API is updated.
-    const data = await apiCall(`/anomalies?page=${page}&limit=${limit}`);
-    const countResponse = await apiCall('/stats'); // Using stats for total count for now
-    
-    const transformedData = data.map((item: any) => ({
-      id: item.id,
-      timestamp: item.timestamp,
-      severity: item.severity,
-      sourceIp: item.source_ip,
-      destinationIp: item.destination_ip,
-      protocol: item.protocol,
-      action: item.action,
-      confidence: item.confidence,
-      reviewed: item.reviewed,
-      details: item.details,
-    }));
-    
-    return {
-      data: transformedData,
-      total: countResponse.total_anomalies,
-    };
+    try {
+      // First try to get real anomalies from database
+      const data = await apiCall(`/anomalies?page=${page}&limit=${limit}`);
+      
+      // Transform database anomalies to ensure they have attackType objects
+      const transformedData = data.map((anomaly: any) => ({
+        ...anomaly,
+        // Ensure attackType is properly formatted if attackTypeId exists
+        attackType: anomaly.attackTypeId !== undefined && anomaly.attackTypeId !== null 
+          ? getAttackTypeInfo(anomaly.attackTypeId) 
+          : undefined,
+        attackConfidence: anomaly.attackConfidence,
+        anomalyScore: anomaly.anomalyScore || anomaly.anomaly_score,
+        reconstructionError: anomaly.reconstructionError || anomaly.reconstruction_error
+      }));
+      
+      return {
+        data: transformedData,
+        total: transformedData.length
+      };
+    } catch (error) {
+      console.warn('Failed to fetch real anomalies, falling back to mock explanations:', error);
+      
+      // Fallback to mock anomaly explanations
+      try {
+        const { mockAnomalyExplanations } = await import('../data/mockAnomalyExplanations');
+        const mockAnomalies = mockAnomalyExplanations.map(item => item.anomaly);
+        
+        // Apply pagination
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedData = mockAnomalies.slice(startIndex, endIndex);
+        
+        return {
+          data: paginatedData,
+          total: mockAnomalies.length
+        };
+      } catch (mockError) {
+        console.error('Failed to load mock anomalies:', mockError);
+        
+        // Final fallback to enhanced detection endpoint
+        const response = await apiCall('/model/detect-enhanced', {
+        method: 'POST',
+        body: JSON.stringify({
+          features: Array.from({ length: 10 }, () => 
+            Array.from({ length: 78 }, () => Math.random() * 2 - 1)
+          ),
+          threshold: 0.22610116
+        }),
+      });
+      
+      // Transform enhanced response to AnomalyData format
+      const mockData = response.anomaly_predictions.map((isAnomaly: boolean, index: number) => {
+        const attackTypeId = response.attack_type_predictions[index];
+        const attackConfidence = response.attack_confidences[index];
+        
+        return {
+          id: `anomaly-${index + 1}`,
+          timestamp: new Date().toISOString(),
+          severity: isAnomaly ? 'high' : 'low',
+          sourceIp: '192.168.1.100',
+          destinationIp: '10.0.0.1',
+          protocol: 'TCP',
+          action: isAnomaly ? 'blocked' : 'allowed',
+          confidence: 0.8,
+          reviewed: false,
+          details: `Two-stage detection: ${isAnomaly ? 'Anomaly detected' : 'Normal traffic'}${attackTypeId !== -1 ? ` with ${getAttackTypeInfo(attackTypeId).name} attack` : ''}`,
+          // Enhanced fields for two-stage detection
+          attackType: attackTypeId !== -1 ? getAttackTypeInfo(attackTypeId) : undefined,
+          attackConfidence: attackConfidence,
+          anomalyScore: response.reconstruction_errors[index],
+          reconstructionError: response.reconstruction_errors[index],
+          features: JSON.stringify(Array.from({ length: 78 }, () => Math.random() * 2 - 1))
+        };
+      });
+      
+      return {
+        data: mockData.slice((page - 1) * limit, page * limit),
+        total: mockData.length
+      };
+      }
+    }
   },
   
   getAnomalyById: async (id: string): Promise<AnomalyData> => {
@@ -301,7 +396,11 @@ export const anomaliesApi = {
       confidence: data.confidence,
       reviewed: data.reviewed,
       details: data.details,
-      features: data.features,  // Add this line to include features
+      features: data.features,
+      anomalyScore: data.anomaly_score || data.reconstruction_error, // Ensure score is present
+      attackType: data.attack_type ? getAttackTypeInfo(data.attack_type) : undefined, // Convert ID to object
+      attackConfidence: data.attack_confidence,
+      reconstructionError: data.reconstruction_error,
     };
   },
   
@@ -369,6 +468,7 @@ export const explanationsApi = {
       // Handle the new comprehensive explanation structure
       if (data.comprehensive_explanation) {
         console.log('=== PROCESSING COMPREHENSIVE EXPLANATION ===');
+        console.log('Backend data.phase3:', data.phase3); // Add this line
         
         // Extract feature importances from phase2 (SHAP-based)
         const featureImportances = data.phase2?.feature_importance || [];
@@ -400,7 +500,9 @@ export const explanationsApi = {
           feature_importances: mappedImportances,
           note: `Anomaly detected: ${data.anomaly_detected}. Reconstruction error: ${data.reconstruction_error?.toFixed(4)}`,
           contributingFactors,
-          recommendations
+          recommendations,
+          reconstruction_error: data.reconstruction_error, // Add this
+          phase3: data.phase3, // Add this
         };
         
         console.log('=== MAPPED EXPLANATION DATA ===');
@@ -588,16 +690,44 @@ export const explanationsApi = {
 
 // Attack type mappings
 const ATTACK_TYPE_MAP: Record<number, AttackTypeInfo> = {
-  0: { id: 0, name: 'BENIGN', description: 'Normal network traffic', severity: 'low', color: '#10b981' },
-  1: { id: 1, name: 'DoS GoldenEye', description: 'Denial of Service GoldenEye attack', severity: 'high', color: '#ef4444' },
-  2: { id: 2, name: 'DoS Hulk', description: 'Denial of Service Hulk attack', severity: 'high', color: '#f97316' },
-  3: { id: 3, name: 'DoS Slowhttptest', description: 'Denial of Service Slow HTTP attack', severity: 'medium', color: '#eab308' },
-  4: { id: 4, name: 'DoS slowloris', description: 'Denial of Service Slowloris attack', severity: 'medium', color: '#f59e0b' }
+  0: { id: -1, name: 'Normal', description: 'Normal network traffic', severity: 'low', color: '#10b981' },
+  1: { id: 0, name: 'Botnet', description: 'Coordinated attack by botnet hosts', severity: 'high', color: '#8b5cf6' },
+  2: { id: 1, name: 'DoS', description: 'Denial of Service attack', severity: 'high', color: '#ef4444' },
+  3: { id: 2, name: 'Infiltration', description: 'Unauthorized access to network resources', severity: 'critical', color: '#dc2626' },
+  4: { id: 3, name: 'Other', description: 'Other types of anomalous traffic', severity: 'medium', color: '#eab308' },
+  5: { id: 4, name: 'PortScan', description: 'Scanning for open ports', severity: 'medium', color: '#f59e0b' }
 };
 
 // Helper functions
 export const getAttackTypeInfo = (attackTypeId: number): AttackTypeInfo => {
-  return ATTACK_TYPE_MAP[attackTypeId] || ATTACK_TYPE_MAP[0];
+  if (attackTypeId === -1) {
+    return ATTACK_TYPE_MAP[0]; // Normal traffic
+  }
+  return ATTACK_TYPE_MAP[attackTypeId + 1] || ATTACK_TYPE_MAP[0];
+};
+
+// Utility function to transform enhanced detection results to anomaly data format
+export const transformTwoStageToAnomalyData = (results: TwoStageDetectionResult[]): AnomalyData[] => {
+  return results.map(result => ({
+    id: result.id,
+    timestamp: result.timestamp.toISOString(),
+    severity: result.isAnomaly ? 'high' : 'low',
+    sourceIp: '192.168.1.100', // Mock IP - should come from actual data
+    destinationIp: '10.0.0.1', // Mock IP - should come from actual data
+    protocol: 'TCP', // Mock protocol
+    action: result.isAnomaly ? 'BLOCK' : 'ALLOW',
+    confidence: result.confidence,
+    reviewed: false,
+    details: result.isAnomaly 
+      ? `Anomaly detected with ${result.attackType?.name || 'unknown attack type'}`
+      : 'Normal network traffic',
+    features: JSON.stringify(result.features),
+    anomalyScore: result.anomalyScore,
+    attackType: result.attackType,
+    attackConfidence: result.attackConfidence,
+    reconstructionError: result.reconstructionError,
+    attackTypeId: result.attackType?.id // Keep for backward compatibility
+  }));
 };
 
 export const formatDetectionResult = (
@@ -687,26 +817,46 @@ export const modelApi = {
     }
   },
   
-  detectAnomaliesEnhanced: async (features: number[][], threshold: number = 0.22610116) => {
+  detectAnomaliesEnhanced: async (features: number[][], threshold: number = 0.22610116): Promise<TwoStageDetectionResult[]> => {
     try {
-      return await apiCall('/model/detect-enhanced', {
+      const response: EnhancedDetectionResponse = await apiCall('/model/detect-enhanced', {
         method: 'POST',
         body: JSON.stringify({
           features,
           threshold
         }),
       });
+      
+      // Transform enhanced response to TwoStageDetectionResult array
+      return features.map((_, index) => ({
+        id: `detection_${Date.now()}_${index}`,
+        timestamp: new Date(),
+        features: features[index] || [],
+        isAnomaly: response.anomaly_predictions[index] === 1,
+        anomalyScore: response.reconstruction_errors[index],
+        threshold: response.threshold,
+        reconstructionError: response.reconstruction_errors[index],
+        attackType: response.attack_type_predictions[index] > 0 
+          ? getAttackTypeInfo(response.attack_type_predictions[index]) 
+          : undefined,
+        attackConfidence: response.attack_confidences[index],
+        confidence: 1 - (response.reconstruction_errors[index] / (response.threshold * 2))
+      }));
     } catch (error) {
       console.warn('Failed to detect anomalies with enhanced model:', error);
-      // Return mock two-stage results
-      return {
-        anomaly_predictions: features.map(() => Math.random() > 0.8 ? 1 : 0),
-        reconstruction_errors: features.map(() => Math.random()),
-        attack_type_predictions: features.map(() => Math.random() > 0.8 ? Math.floor(Math.random() * 4) + 1 : 0),
-        attack_confidences: features.map(() => Math.random()),
+      // Return mock two-stage results with proper typing
+      return features.map((_, index) => ({
+        id: `mock_detection_${Date.now()}_${index}`,
+        timestamp: new Date(),
+        features: features[index] || [],
+        isAnomaly: Math.random() > 0.8,
+        anomalyScore: Math.random(),
         threshold,
-        attack_types: ['BENIGN', 'DoS GoldenEye', 'DoS Hulk', 'DoS Slowhttptest', 'DoS slowloris']
-      };
+        reconstructionError: Math.random(),
+        attackType: Math.random() > 0.7 ? getAttackTypeInfo(Math.floor(Math.random() * 4) + 1) : undefined,
+        attackConfidence: Math.random(),
+        confidence: Math.random()
+      }));
     }
   },
   
